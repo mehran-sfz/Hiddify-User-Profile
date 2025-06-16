@@ -48,6 +48,7 @@
                             <option value="all" {% if filter != 'active' and filter != 'inactive' %}selected{% endif %}>همه</option>
                             <option value="active" {% if filter == 'active' %}selected{% endif %}>فعال</option>
                             <option value="inactive" {% if filter == 'inactive' %}selected{% endif %}>غیرفعال</option>
+                            <option value="package_ended" {% if filter == 'package_ended' %}selected{% endif %}>تمام شدن بسته</option>
                         </select> 
                     </div> 
                 </form>
@@ -69,10 +70,15 @@
                     <td>{{ config.name }}</td>
 
                     <td>
-                        {% if config.enable %}
+                        {% if config.enable == True and config.is_active == True %}
                         <span class="badge bg-success">فعال</span>
+
+                        {% elif config.enable == True and config.is_active == False %}
+                        <span class="badge bg-warning">تمام شده</span>
+
                         {% else %}
-                        <span class="badge bg-danger">غیر فعال</span>
+                        <span class="badge bg-danger">چک شود</span>
+                        
                         {% endif %}
                       </td>
 

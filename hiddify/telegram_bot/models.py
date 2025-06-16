@@ -7,6 +7,7 @@ class Telegram_Bot_Info(models.Model):
     site_domain = models.CharField(max_length=256)
     token = models.CharField(max_length=256)
     bot_name = models.CharField(max_length=256)
+    admin_user_id = models.CharField(max_length=256, blank=True, null=True)
     created_date =  models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     

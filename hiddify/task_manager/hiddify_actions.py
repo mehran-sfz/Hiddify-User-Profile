@@ -2,6 +2,7 @@ import requests
 from django.conf import settings
 from datetime import date
 import logging
+import urllib.parse
 
 import qrcode
 from io import BytesIO
@@ -162,6 +163,7 @@ def on_off_user(uuid, enable=True,
 
     data = {
         "enable": enable,
+        "is_active" : enable,
         "wg_pk": "string",
         "wg_psk": "string",
         "wg_pub": "string",
@@ -219,7 +221,8 @@ def extract_uuid_from_url(url: str) -> str:
 
 def send_telegram_message(token, chat_id, message):
     try:
-        url = f'https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={message}'
+        encoded_message = urllib.parse.quote_plus(message)
+        url = f'https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={encoded_message}&parse_mode=HTML'
         response = requests.get(url)
         return response.ok
     except Exception as e:

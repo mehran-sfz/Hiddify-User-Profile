@@ -6,6 +6,8 @@ from django.utils import timezone
 from django.db import transaction
 from django.db.models import Q, F
 
+from django.conf import settings
+
 from client_actions.models import Config, Order
 
 from telegram_bot.models import Telegram_Bot_Info, Telegram_account
@@ -14,7 +16,7 @@ from task_manager.hiddify_actions import update_user, get_users, on_off_user, se
 
 from adminlogs.action import add_admin_log
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import logging
 
 
@@ -49,6 +51,10 @@ def fetch_data_from_api():
         if not users_data:
             logger.error('Failed to fetch data from API.')
             return 'Failed to fetch data from API.'
+        
+        api_uuids = {item['uuid'] for item in users_data}
+        updated_uuids = set()
+
 
         # Update your database
         with transaction.atomic():  # Ensure atomic DB operations
@@ -84,8 +90,19 @@ def fetch_data_from_api():
                         'start_date': start_date,
                         'telegram_id': item['telegram_id'],
                         'usage_limit_GB': item['usage_limit_GB'],
+                        'comment' : item['comment'],
                     }
                 )
+                updated_uuids.add(item['uuid'])
+                
+            # Find users not in the API data and mark them as disabled
+            disabled_users = HiddifyUser.objects.exclude(uuid__in=updated_uuids)
+            for user in disabled_users:
+                user.enable = False
+                user.comment = "deleted"
+                user.save()
+                logger.info(f"User disabled: {user.uuid} (not in API data)")
+                
             logger.info('Task completed successfully.')
             return 'Database updated successfully.'
 
@@ -96,6 +113,7 @@ def fetch_data_from_api():
     except Exception as e:
         logger.error(f'Task failed with error: {str(e)}')
         return f'Task failed with error: {str(e)}'
+
 
 # Task to check if user's subscription has expired and has a pending order or not
 @shared_task()
@@ -157,6 +175,7 @@ def check_subscription_expiry():
                 f'User do not have a pending order: {expired_user.uuid} name: {expired_user.name}')
             continue
 
+
 # Task to disable users that have not paid for their subscription
 @shared_task(bind=True, max_retries=5)
 def disable_not_paid_users(self):
@@ -174,15 +193,21 @@ def disable_not_paid_users(self):
     hiddify_api_key = hiddify_access_info.hiddify_api_key
     panel_admin_domain = hiddify_access_info.panel_admin_domain
     admin_proxy_path = hiddify_access_info.admin_proxy_path
+    
+    telegram_info = Telegram_Bot_Info.objects.latest('created_date')
 
-    # Get 5 days ago date
-    five_days_ago = timezone.now() - timedelta(days=5)
+    # Get WAITING_FOR_PAYMENT_TIMEOUT_DAYS days ago date
+    waiting_for_payment_timeout_days = timezone.now() - timedelta(days=settings.WAITING_FOR_PAYMENT_TIMEOUT_DAYS)
 
-    # Query all orders that are older than 5 days, still pending, and not paid
+    # Query that get uuid of active configs
+    active_configs_uuids = HiddifyUser.objects.filter(enable=True).values_list('uuid', flat=True)
+
+    # Query all orders that are older than WAITING_FOR_PAYMENT_TIMEOUT_DAYS days, still pending, and not paid
     unpaid_orders = Order.objects.filter(
-        updated_date__lte=five_days_ago,  # Orders created more than 5 days ago
+        updated_date__lte=waiting_for_payment_timeout_days,  # Orders created more than WAITING_FOR_PAYMENT_TIMEOUT_DAYS days ago
         status=False,  # Order not paid
-        pending=False   # Order not pending
+        pending=False,   # Order not pending
+        config__uuid__in=active_configs_uuids
     )
 
     for order in unpaid_orders:
@@ -194,7 +219,27 @@ def disable_not_paid_users(self):
                         panel_admin_domain=panel_admin_domain
                         )
             logger.info(f'User disabled: {order.config.uuid}')
-            continue
+            
+            config = HiddifyUser.objects.get(uuid=order.config.uuid)
+            
+            if telegram_info:
+                
+                # Send a message to the user about disabling their account
+                try:
+                    telegram_account = Telegram_account.objects.get(user=order.user)
+                    message = f'⚠️ <b>اطلاع رسانی</b> ⚠️\n\n🔴 اشتراک "{config.name}" شما به دلیل عدم پرداخت هزینه، قطع شده است.\n\nبرای فعال‌سازی مجدد، لطفاً از طریق <a href="{settings.DOMAIN_NAME}">لینک پرداخت</a> اقدام فرمایید. 🙏'
+                    send_telegram_message(token=telegram_info.token, chat_id=telegram_account.telegram_user_id, message=message)
+                    logger.info(f'Message sent to {order.user} about disabling user: {order.config.uuid}')
+                
+                except Telegram_account.DoesNotExist:
+                    logger.error(f"No telegram account found for user: {order.user}")
+                    continue
+                
+                # send admin log to telegram
+                message = f'کاربری با uuid: {order.config.uuid} و نام: {config.name} به دلیل عدم پرداخت هزینه، غیرفعال شد.'
+                send_telegram_message(token=telegram_info.token, chat_id=telegram_info.admin_user_id, message=message,)
+            
+            
         except Exception as e:
             logger.error(f'Error disabling user: {str(e)}')
             continue
@@ -205,17 +250,18 @@ def disable_not_paid_users(self):
 def send_payment_reminder_messsage():
     """ Send message trough telegram bot """
 
+    update_link = settings.DOMAIN_NAME
     telegram_info = Telegram_Bot_Info.objects.latest('created_date')
     if not telegram_info:
         logger.error("No objects found in Telegram_Bot_Info.")
         return 0
 
-    # Get 3 days ago date
-    three_days_ago = timezone.now() - timedelta(days=3)
+    # Get warning days ago date
+    Warning_days = timezone.now() - timedelta(days=settings.WARNING_FOR_PAYMENT_TIMEOUT_DAYS)
 
-    # Query all orders that are older than 3 days, still pending, and not paid
+    # Query all orders that are older than WARNING_FOR_PAYMENT_TIMEOUT_DAYS days, still pending, and not paid
     unpaid_orders = Order.objects.filter(
-        updated_date__lte=three_days_ago,  # Orders created more than 3 days ago
+        updated_date__lte=Warning_days,  # Orders created more than WARNING_FOR_PAYMENT_TIMEOUT_DAYS days ago
         status=False,  # Order not paid
         pending=False   # Order not pending
     )
@@ -230,11 +276,15 @@ def send_payment_reminder_messsage():
             config = HiddifyUser.objects.get(uuid=unpaid_order.config.uuid)
 
             # calculate the remaining days
-            remaining_days = 7 - (timezone.now() - unpaid_order.updated_date).days
+            remaining_days = settings.WAITING_FOR_PAYMENT_TIMEOUT_DAYS - (date.today() - unpaid_order.created_date.date()).days
 
-            # Create the message
-            message = f"یادآوری پرداخت اشتراک {config.name} \nزمان باقی مانده : {remaining_days} روز \n پلن سفارش داده شده : {unpaid_order.plan}"
-
+            if remaining_days > 0:
+                # Create the message
+                message = f'🔔 <b>یادآوری پرداخت اشتراک</b> 🔔\n\n⏳ مهلت پرداخت اشتراک "{config.name}" رو به اتمامه! فقط <b>{remaining_days} روز</b> دیگه فرصت دارید.\n\n📦 پلن انتخابی شما: <b>{unpaid_order.plan}</b>\n\nبرای پرداخت هزینه اشتراک، لطفاً روی <a href="{update_link}">لینک پرداخت</a> کلیک کنید. 🙏'
+            else:
+                message = f'🔔🔴 <b>یادآوری پرداخت اشتراک</b> 🔴🔔\n\n⏳ مهلت پرداخت اشتراک "{config.name}" به پایان رسیده است! لطفاً هر چه سریع‌تر اقدام کنید.\n\n📦 پلن انتخابی شما: <b>{unpaid_order.plan}</b>\n\nبرای پرداخت و فعال‌سازی اشتراک، لطفاً روی <a href="{update_link}">لینک پرداخت</a> کلیک کنید. 🙏'
+            
+                
             # Send the payment reminder message
             send_telegram_message(
                 token=telegram_info.token,
@@ -259,7 +309,6 @@ def send_payment_reminder_messsage():
             continue
 
 
-
 # Task to send a warning message to users that have not enough days to their subscription and current_usage_GB is more than usage_limit_GB
 @shared_task()
 def send_warning_message():
@@ -270,18 +319,18 @@ def send_warning_message():
         logger.error("No objects found in Telegram_Bot_Info.")
         return 0
     
-    # Calculate the threshold for "less than 3 days from now"
-    three_days_later = timezone.now().date() + timedelta(days=3)
+    # Calculate the threshold for "less than WARNING_FOR_CONFIG_TIMEOUT_DAYS days from now"
+    warning_for_config_timeout_days = timezone.now().date() + timedelta(days=settings.WARNING_FOR_CONFIG_TIMEOUT_DAYS)
 
     # Query for hiddify_accounts
     hiddify_accounts = HiddifyUser.objects.filter(
         Q(
             usage_limit_GB__isnull=False,  # Ensure usage_limit_GB is not null
             current_usage_GB__isnull=False,  # Ensure current_usage_GB is not null
-            usage_limit_GB__lte=F('current_usage_GB') + 5  # Difference is less than 5
+            usage_limit_GB__lte=F('current_usage_GB') + settings.WARNING_FOR_USAGE_GB  # Difference is less than WARNING_FOR_USAGE_GB
         ) | Q(
             end_date__isnull=False,  # Ensure end_date exists
-            end_date__lte=three_days_later  # end_date is within 3 days
+            end_date__lte=warning_for_config_timeout_days  # end_date is within WARNING_FOR_CONFIG_TIMEOUT_DAYS days
         )
     )
 
@@ -302,15 +351,16 @@ def send_warning_message():
             # remind days
             remining_trafic = round(hiddify_account.usage_limit_GB - hiddify_account.current_usage_GB, 2)
             remind_days = (hiddify_account.end_date - timezone.now().date()).days
-            if remind_days <= 2 :
-                message = f"یادآوری تمدید اشتراک {hiddify_account.name} \n زمان باقی مانده : {remind_days} روز \n مصرف فعلی : {round(hiddify_account.current_usage_GB, 2)} GB \n سقف بسته : {hiddify_account.usage_limit_GB} GB"
+            update_link = settings.DOMAIN_NAME
 
-            elif remining_trafic <= 5:
-                message = f"یادآوری تمدید اشتراک {hiddify_account.name} \n زمان باقی مانده : {remind_days} روز \n ترافیک باقی مانده : {remining_trafic} GB"
-            
+            if remind_days < 0:
+                message = f'🔴 <b>هشدار: اشتراک شما منقضی شده است!</b> 🔴\n\n👤 اکانت: {hiddify_account.name}\n\n⏳ زمان باقی مانده: <b>{remind_days} روز</b>\n\n📊 مصرف فعلی: <b>{round(hiddify_account.current_usage_GB, 2)} GB</b> از <b>{hiddify_account.usage_limit_GB} GB</b>\n\n🚦 ترافیک باقیمانده: <b>{remining_trafic} GB</b>\n\nبرای جلوگیری از قطعی، لطفاً روی <a href="{update_link}">لینک تمدید</a> کلیک کنید. 🙏'
+
+            elif remining_trafic >= 10 :
+                message = f'🔄 <b>یادآوری تمدید اشتراک</b> 🔄\n\n👤 اکانت: {hiddify_account.name}\n\n⏳ زمان باقی مانده: <b>{remind_days} روز</b>\n\nبرای جلوگیری از قطعی، لطفاً روی <a href="{update_link}">لینک تمدید</a> کلیک کنید. 🙏'            
             else:
-                continue
-
+                message = f'🔄 <b>یادآوری تمدید اشتراک</b> 🔄\n\n👤 اکانت: {hiddify_account.name}\n\n⏳ زمان باقی مانده: <b>{remind_days} روز</b>\n\n📊 مصرف فعلی: <b>{round(hiddify_account.current_usage_GB, 2)} GB</b> از <b>{hiddify_account.usage_limit_GB} GB</b>\n\n🚦 ترافیک باقیمانده: <b>{remining_trafic} GB</b>\n\nبرای جلوگیری از قطعی، لطفاً روی <a href="{update_link}">لینک تمدید</a> کلیک کنید. 🙏'                        
+            
             # Send the warning message
             send_telegram_message(
                 token=telegram_info.token,

@@ -27,7 +27,9 @@
   <div class="container mt-5 pt-5">
   <div class="row g-4">
   {% for config in data.config %}
+  {% if config.comment != 'deleted' %}
   {% include "includes/user/cards.html" %}
+  {% endif %}
   {% endfor %}
   </div>
   </div>

@@ -61,8 +61,11 @@
                     <td>{{ order.created_date|to_jalali }}</td>
                     <td>{{ order.plan }}</td>
                     <td>
+                      
                       {% if order.status %}
                       <span class="badge bg-success">پرداخت شده</span>
+                      {% elif not order.status and order.order_payment %}
+                      <span class="badge bg-warning">در انتظار تایید</span>
                       {% else %}
                       <span class="badge bg-danger">پرداخت نشده</span>
                       {% endif %}

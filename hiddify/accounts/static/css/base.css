@@ -96,6 +96,16 @@ body::before {
   margin: 10px; /* Remove margin t10px respect border-radius */
 }
 
+.deleted-config .card {
+  border: 2px solid black;
+  opacity: 0.7; /* کمی بور کردن */
+}
+.deleted-config .card-title,
+.deleted-config .card-text,
+.deleted-config .badge {
+  text-decoration: line-through;
+}
+
 .thumbnail-image {
   border-radius: 10px !important;
 }

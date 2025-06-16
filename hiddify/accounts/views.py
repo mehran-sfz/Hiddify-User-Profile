@@ -18,7 +18,7 @@ from plans.models import Plan
 from adminlogs.models import AdminLog, Message
 from telegram_bot.models import Telegram_Bot_Info
 
-from datetime import date, datetime
+from datetime import date
 from django.utils import timezone
 
 # ------------------------------------ User Panel Views ------------------------------------#
@@ -35,6 +35,13 @@ def LoginView(request):
 
             # Authenticate user by username (phone) and password
             try:
+                
+                try:
+                    phone_number = "0" + str(int(phone_number))
+                except ValueError:
+                    messages.error(request, 'شماره تلفن باید فقط شامل اعداد باشد')
+                    return redirect('/login-register/')
+                
                 user = authenticate(
                     request, phone_number=phone_number, password=password)
             except (ValueError, ValidationError) as e:
@@ -54,7 +61,7 @@ def LoginView(request):
 
             name = request.POST.get('name')
             family = request.POST.get('family')
-            phone = request.POST.get('phone')
+            phone_number = request.POST.get('phone')
             password = request.POST.get('password')
             confirm_password = request.POST.get('confirm_password')
             invited_code = request.POST.get('invite_code')
@@ -62,13 +69,19 @@ def LoginView(request):
             if password != confirm_password:
                 messages.error(request, "پسوورد ها یکی نیستند")
                 return redirect('/login-register/')
+            
+            try:
+                phone_number = "0" + str(int(phone_number))
+            except ValueError:
+                messages.error(request, 'شماره تلفن باید فقط شامل اعداد باشد')
+                return redirect('/login-register/')
 
             # Check if phone number is already registered
-            if not CustomUser.objects.filter(phone_number=phone).exists():
+            if not CustomUser.objects.filter(phone_number=phone_number).exists():
                 try:
                     # Try to create a new user
                     user = CustomUser.objects.create_user(
-                        phone_number=phone, password=password, first_name=name, last_name=family)
+                        phone_number=phone_number, password=password, first_name=name, last_name=family)
                 except (ValueError, ValidationError) as e:
                     messages.error(request, f'ارور در ساخت یوزر: {str(e)}')
                     return redirect('/login-register/')
@@ -80,15 +93,19 @@ def LoginView(request):
                 if invited_code:
                     try:
                         # or any other field you use to identify users
-                        invited_user = CustomUser.objects.get(
-                            phone_number=invited_code)
-                    except CustomUser.DoesNotExist:
+                        invited_user = Profile.objects.get(invite_code=invited_code)
+                    except Profile.DoesNotExist:
+                        user.delete()  # Delete the user if invite code is invalid
                         messages.error(
                             request, "کاربری با چنین کد دعوتی وجود ندارد")
                         return redirect('/login-register/')
 
                 try:
-                    profile = Profile(user=user, invited_by=invited_user)
+                    if invited_user:
+                        profile = Profile(user=user, invited_by=invited_user.user)
+                    else:
+                        profile = Profile(user=user)
+                        
                     profile.save()
                     messages.success(request, "کاربر با موفقیت ساخته شد")
                 except ValueError as e:
@@ -207,6 +224,7 @@ class HomeView(TemplateView):
                 'qrcode': qrcode,
                 'subscriptionlink': subscriptionlink,
                 'last_order': last_order,
+                'comment': hiddify_user.comment,
             })
 
         return_data = {
@@ -262,7 +280,7 @@ class HomeView(TemplateView):
             
             
             # how many dayes passed from the creation date
-            remaining_days = 5 - (date.today() - order.created_date.date()).days
+            remaining_days = settings.WAITING_FOR_PAYMENT_TIMEOUT_DAYS - (date.today() - order.created_date.date()).days
             
             return remaining_days
         elif not order.status and order.pending:
@@ -441,10 +459,13 @@ def AdminConfigsView(request):
         
         filter = request.GET.get('filter')
         if filter == 'active':
-            configs = HiddifyUser.objects.filter(enable=True)
+            configs = HiddifyUser.objects.filter(enable=True, is_active=True)
 
         elif filter == 'inactive':
             configs = HiddifyUser.objects.filter(enable=False)
+            
+        elif filter == 'package_ended':
+            configs = HiddifyUser.objects.filter(enable=True, is_active=False)
 
         else:
             configs = HiddifyUser.objects.all()
@@ -455,30 +476,45 @@ def AdminConfigsView(request):
         action = request.POST.get('action')
 
         if action == 'on_off':
-
             hidify_user_uuid = request.POST.get('hidify_user_uuid')
             if not hidify_user_uuid:
                 messages.error(request, 'لطفا یوزر انتخاب کنید')
-                return redirect('/admin-panel/configs')
+                return redirect('/admin-panel/configs/')
+            
+            try:
+                hiddify_access_info = HiddifyAccessInfo.objects.latest('created_date')
+            except Exception as e:
+                messages.warning(request, 'خطا در انجام عملیات', e)
+                return redirect('/admin-panel/configs/')
 
+            hiddify_api_key = hiddify_access_info.hiddify_api_key
+            panel_admin_domain = hiddify_access_info.panel_admin_domain
+            admin_proxy_path = hiddify_access_info.admin_proxy_path
+            
             try:
                 hiddify_user = HiddifyUser.objects.get(uuid=hidify_user_uuid)
-                if hiddify_user.enable:
-                    status = on_off_user(hiddify_user.uuid, enable=False)
-                    if status:
-                        hiddify_user.enable = False
+                new_enable_status = not hiddify_user.enable
+                status = on_off_user(hiddify_user.uuid,
+                                    enable=new_enable_status,
+                                    hiddify_api_key=hiddify_api_key,
+                                    admin_proxy_path=admin_proxy_path,
+                                    panel_admin_domain=panel_admin_domain,
+                                     )
+                if status:
+                    hiddify_user.enable = new_enable_status
+                    hiddify_user.save()
+                    if new_enable_status:
+                        messages.success(request, 'با موفقیت فعال شد')
+                    else:
                         messages.warning(request, 'با موفقیت غیر فعال شد')
                 else:
-                    status = on_off_user(hiddify_user.uuid, enable=True)
-                    if status:
-                        hiddify_user.enable = True
-                        messages.success(request, 'با موفقیت فعال شد')
-                hiddify_user.save()
+                    messages.error(request, 'خطا در تغییر وضعیت کاربر') # اضافه کردن پیام خطا برای وضعیت ناموفق on_off_user
+
             except HiddifyUser.DoesNotExist:
                 messages.error(request, 'کاربر یافت نشد')
-                return redirect('/admin-panel/configs')
+                return redirect('/admin-panel/configs/')
 
-    return redirect('/admin-panel/configs')
+    return redirect('/admin-panel/configs/')
 
 
 def AdminOrdersView(request):

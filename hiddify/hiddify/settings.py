@@ -20,6 +20,23 @@ if IS_HTTPS_USED:
     CSRF_TRUSTED_ORIGINS = [
         os.environ.get('CSRF_TRUSTED_ORIGINS'),
         ]
+    
+
+# duration for different tasks
+WAITING_FOR_PAYMENT_TIMEOUT_DAYS = int(os.environ.get('WAITING_FOR_PAYMENT_TIMEOUT_DAYS', 5))
+WARNING_FOR_PAYMENT_TIMEOUT_DAYS = int(os.environ.get('WARNING_FOR_PAYMENT_TIMEOUT_DAYS', 3))
+WARNING_FOR_CONFIG_TIMEOUT_DAYS = int(os.environ.get('WARNING_FOR_CONFIG_TIMEOUT_DAYS', 5))
+WARNING_FOR_USAGE_GB = int(os.environ.get('WARNING_FOR_USAGE_GB', 5))
+FETCH_USERS_DURATION_SECONDS = int(os.environ.get('FETCH_USERS_DURATION_SECONDS', 120))
+TELEGRAM_NOTIFICATION_INTERVAL_HOURS = int(os.environ.get('TELEGRAM_NOTIFICATION_INTERVAL_HOURS', 12))
+
+# information
+DOMAIN_NAME = os.environ.get('DOMAIN_NAME', 'https://t.me/batmanam2').strip()
+CHANNEL_NAME= os.environ.get('CHANNEL_NAME', 'Batmanam')
+CHANNEL_LINK= os.environ.get('CHANNEL_LINK', 'https://t.me/batmanam_v')  
+SUPPORT_TELEGRAM_LINK= os.environ.get('SUPPORT_TELEGRAM_LINK', 'https://t.me/batmanam2')
+
+    
 
 
 # Application definition
@@ -167,27 +184,27 @@ SIMPLE_JWT = {
 
 # Celery settings
 CELERY_BEAT_SCHEDULE = {
-    'fetch-data-every-1-minutes': {
+    'fetch-data-from-hiddify-api': {
         'task': 'task_manager.tasks.fetch_data_from_api',
-        'schedule': timedelta(seconds=60),  # Executes every 1 minutes
+        'schedule': timedelta(seconds=FETCH_USERS_DURATION_SECONDS),  # Executes every 1 minutes
     },
     
-    'check-subscription-expiry-every-1-minutes': {
+    'check-subscription-expiry': {
         'task': 'task_manager.tasks.check_subscription_expiry',
-        'schedule': timedelta(seconds=60),  # Executes every 2 hours   
+        'schedule': timedelta(seconds=FETCH_USERS_DURATION_SECONDS),  # Executes every 2 hours   
     },
     
-    'disable-not-paid-users-every-day' : {
+    'disable-not-paid-users' : {
         'task': 'task_manager.tasks.disable_not_paid_users',
-        'schedule': timedelta(seconds=43200),  # Executes every day
+        'schedule': timedelta(hours=TELEGRAM_NOTIFICATION_INTERVAL_HOURS),
     },
     
     'send-telegram-notification-to-unpayed-users': {
         'task': 'task_manager.tasks.send_payment_reminder_messsage',
-        'schedule': timedelta(seconds=43200),  # Executes every day
+        'schedule': timedelta(hours=TELEGRAM_NOTIFICATION_INTERVAL_HOURS),
     },
     'send-telegram-warning-to-expired-users': {
         'task': 'task_manager.tasks.send_warning_message',
-        'schedule': timedelta(seconds=21600),  # Executes 12 hours
+        'schedule': timedelta(hours=TELEGRAM_NOTIFICATION_INTERVAL_HOURS),
     },
 }

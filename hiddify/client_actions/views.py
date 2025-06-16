@@ -5,11 +5,12 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
 from client_actions.models import Config, Order, Payment
-from task_manager.models import HiddifyUser
+from task_manager.models import HiddifyUser, HiddifyAccessInfo
 from plans.models import Plan
+from telegram_bot.models import Telegram_Bot_Info
 
 from adminlogs.action import add_admin_log
-from task_manager.hiddify_actions import add_new_user, extract_uuid_from_url, delete_user
+from task_manager.hiddify_actions import add_new_user, extract_uuid_from_url, delete_user, send_telegram_message
 
 
 def AddConfigView(request):
@@ -94,11 +95,9 @@ def BuyNewConfigView(request):
             hiddify_access_info = HiddifyAccessInfo.objects.latest('created_date')
         except HiddifyAccessInfo.DoesNotExist:
             messages.error(request, 'خطای در سایت')
-            logger.error("There are any hiddify access info available")
             return redirect('/buyconfig/')
         except Exception as e:
             messages.error(request, 'خطای در سایت')
-            logger.error(f"An unexpected error occurred: {e}")
             add_admin_log(
                             f'Error in add hiddify user in client acction view - {e}', 'user', request.user)
             return redirect('/buyconfig/')
@@ -138,7 +137,7 @@ def BuyNewConfigView(request):
         # Create the new config
         try:
             config = Config.objects.create(
-                user=request.user, uuid=add_new_user_status)
+                user=request.user, uuid=add_new_user_status['uuid'])
             messages.success(request, 'کانفیگ با موفقیت ذخیره شد')
         except Exception as e:
             messages.error(
@@ -148,9 +147,32 @@ def BuyNewConfigView(request):
         # Create the new order
         try:
             order = Order.objects.create(
-                user=request.user, config=Config.objects.get(user=request.user, uuid=add_new_user_status), plan=plan)
+                user=request.user, config=Config.objects.get(user=request.user, uuid=add_new_user_status['uuid']), plan=plan)
             order.save()
             messages.success(request, 'سفارش با موفقیت ثبت شد')
+            
+            # send telegram message to admin trough html message template
+            telegram_bot_info = Telegram_Bot_Info.objects.first()
+            if telegram_bot_info:
+                telegram_message = f"""
+                <b>سفارش جدید ثبت شد</b>
+                <b>نام کاربر:</b> {name}
+                <b>UUID:</b> {add_new_user_status['uuid']}
+                <b>طول دوره:</b> {plan.duration} days
+                <b>ترافیک:</b> {plan.trafic} GB
+                <b>شماره سفارش:</b> {order.pk}
+                """            
+            respons = send_telegram_message(
+                token=telegram_bot_info.token,
+                chat_id=telegram_bot_info.admin_user_id,
+                message=telegram_message)
+            
+            if not respons:
+                add_admin_log(
+                    f'Error in send telegram message for new order {order.pk}', 'user', request.user)
+            
+            
+            
         except Exception as e:
 
             config.delete()
@@ -209,6 +231,30 @@ def AddOrderView(request):
             order.save()
 
             messages.success(request, 'سفارش با موفقیت ثبت شد')
+            
+            
+            # send telegram message to admin trough html message template
+            telegram_bot_info = Telegram_Bot_Info.objects.first()
+            if telegram_bot_info:
+                telegram_message = f"""
+                <b>سفارش جدید ثبت شد</b>
+                <b>شماره کاربر:</b> {request.user.phone_number}
+                <b>نام کانفیگ:</b> {hiddify_user.name}
+                <b>UUID:</b> {selected_plan_config_uuid}
+                <b>پلن انتخاب شده:</b> {plan}
+                <b>شماره سفارش:</b> {order.pk}
+                """
+            
+            respons = send_telegram_message(
+                token=telegram_bot_info.token,
+                chat_id=telegram_bot_info.admin_user_id,
+                message=telegram_message)
+            
+            if not respons:
+                add_admin_log(
+                    f'Error in send telegram message for new order {order.pk}', 'user', request.user)
+            
+            
             return redirect('/home/')
 
 
@@ -238,8 +284,29 @@ def OrderEditView(request):
                 # Update the plan for the order
                 order.plan = Plan.objects.get(pk=selected_plan)
                 order.save()
-
+                
+                
+                # send telegram message to admin trough html message template
+                telegram_bot_info = Telegram_Bot_Info.objects.first()
+                if telegram_bot_info:
+                    telegram_message = f"""
+                    <b>سفارش ویرایش شد</b>
+                    <b>شماره کاربر:</b> {request.user.phone_number}
+                    <b>پلن جدید:</b> {order.plan}
+                    <b>UUID کانفیگ:</b> {selected_uuid}
+                    <b>شماره سفارش:</b> {order.pk}
+                    """
+                    
+                    respons = send_telegram_message(
+                        token=telegram_bot_info.token,
+                        chat_id=telegram_bot_info.admin_user_id,
+                        message=telegram_message)
+                    if not respons: 
+                        add_admin_log(
+                            f'Error in send telegram message for edit order {order.pk}', 'user', request.user)                
+                
                 messages.success(request, 'سفارش با موفقیت ویرایش شد')
+                
             else:
                 messages.error(request, 'عملیات نامعتبر است')
 
@@ -323,6 +390,30 @@ def PaymentView(request):
                 screenshot=payment_picture,
                 tracking_code=tracking_code
             )
+            
+            
+            
+            # send telegram message to admin trough html message template
+            telegram_bot_info = Telegram_Bot_Info.objects.first()
+            if telegram_bot_info:
+                telegram_message = f"""
+                <b>پرداخت جدید ثبت شد</b>
+                <b>شماره کاربر:</b> {request.user.phone_number}
+                <b>UUID کانفیگ:</b> {config_uuid}
+                <b>شماره سفارش:</b> {order_pk}
+                <b>کد رهگیری:</b> {tracking_code}
+                <b>تصویر پرداخت:</b> {'وجود دارد' if payment_picture else 'ندارد'}
+                <b>شماره پرداخت:</b> {payment.pk}
+                """
+            
+            respons = send_telegram_message(
+                token=telegram_bot_info.token,
+                chat_id=telegram_bot_info.admin_user_id,
+                message=telegram_message)
+            if not respons:
+                add_admin_log(
+                    f'Error in send telegram message for new payment {payment.pk}', 'user', request.user)
+            
             messages.success(request, 'پرداخت با موفقیت ثبت شد')
 
         except (Order.DoesNotExist, Config.DoesNotExist):
@@ -377,7 +468,7 @@ def ConfirmOrderAdminView(request):
 
         if not payment_pk or not confirm_payment:
             messages.error(request, 'خطا در اطلاعات وارد شده')
-            return redirect('/admin-panel/order')
+            return redirect('/admin-panel/orders/')
 
         try:
             payment = Payment.objects.get(pk=payment_pk)
@@ -399,4 +490,4 @@ def ConfirmOrderAdminView(request):
             add_admin_log(f'Error in confirm order {e}', 'admin', request.user)
             messages.error(request, f'خطا در تایید سفارش: {str(e)}')
 
-    return redirect('/admin-panel/order')
+    return redirect('/admin-panel/orders/')

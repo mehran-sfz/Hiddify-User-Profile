@@ -34,7 +34,9 @@
             {{ config.name }}
           </h5>
 
-          {% if not config.is_active %}
+          {% if config.is_active %}
+          <span class="badge text-bg-success text-wrap">فعال</span>
+          {% else %}
           <span class="badge text-bg-danger text-wrap">غیرفعال</span>
           {% endif %}
 
@@ -82,7 +84,7 @@
               <p class="card-text">
                 روزهای باقی‌مانده:
 
-                {% if not config.package_days %}
+                {% if config.package_days == None %}
                 <span class="badge text-bg-secondary text-wrap"
                   >شروع نشده</span
                 >
@@ -90,13 +92,17 @@
                 <span class="badge text-bg-success text-wrap"
                   >{{ config.package_days }} روز</span
                 >
-                {% elif config.package_days <= 5 and config.package_days >= 0 %}
+                {% elif config.package_days <= 5 and config.package_days > 0 %}
                 <span class="badge text-bg-warning text-wrap"
                   >{{ config.package_days }} روز</span
                 >
+                {% elif config.package_days <= 0 %}
+                <span class="badge text-bg-warning text-wrap"
+                  >پایان یافته - ({{ config.package_days }} گذشته) </span
+                >
                 {% else %}
                 <span class="badge text-bg-danger text-wrap"
-                  >{{ config.package_days|abs_value }} روز گذشته</span
+                  >{{ config.package_days|abs_value }} روز</span
                 >
                 {% endif %}
               </p>
@@ -126,7 +132,7 @@
 
                 {% elif config.last_order.status > 0 %}
                 <span class="badge text-bg-warning"
-                  >پرداخت نشده قطعی در : {{ config.last_order.status }}
+                  >پرداخت نشده قطع شدن اشتراک در : {{ config.last_order.status }}
                   روز</span
                 >
 
@@ -233,8 +239,8 @@
         </div>
 
         <!-- Card Footer -->
-        {% if not config.is_active or config.package_days <= 10 or config.left_trafic <= 5 %}
-        {% if config.last_order == None or config.last_order.pending == 'not pending' %}
+        {% if config.package_days <= 10 or config.left_trafic <= 5 %}
+        {% if config.last_order == None or config.last_order.status == 'payed' and not config.last_order.pending %}
         <div class="card-footer">
           <form
             method="post"

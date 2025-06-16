@@ -9,6 +9,7 @@ from plans.models import Plan
 class Config(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='config')
     uuid = models.CharField(max_length=256 ,blank=False, null=False, unique=True)
+    enabled = models.BooleanField(default=True)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     

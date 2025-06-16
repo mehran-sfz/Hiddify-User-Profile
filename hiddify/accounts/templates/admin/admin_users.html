@@ -45,7 +45,6 @@
                   <tr>
                     <th>شماره تماس</th>
                     <th>نام و نام خانوادگی</th>
-                    <th>آیدی تلگرام</th>
                     <th>کد دعوت</th>
                     <th>دعوت کننده</th>
                     <th>وضعیت اکانت</th>
@@ -57,12 +56,11 @@
                   <tr>
                     <td>{{ profile.user.phone_number }}</td>
                     <td>{{ profile.user.first_name }} {{ profile.user.last_name }}</td>
-                    <td>{{ profile.telegram_id }}</td>
                     <td>{{ profile.invite_code }}</td>
 
                     <td>
                     {% if profile.invited_by %}
-                        {{ profile.invited_by.user }}
+                        {{ profile.invited_by }}
                     {% else %}
                             <span class="badge bg-danger">دعوت نشده</span>
                     {% endif %}

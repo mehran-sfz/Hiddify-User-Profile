@@ -4,7 +4,7 @@ from datetime import timedelta
 class HiddifyUser(models.Model):
     
     added_by_uuid = models.CharField(max_length=256, blank=True, null=True)
-    current_usage_GB = models.FloatField(blank=True, null=True)
+    current_usage_GB = models.FloatField(blank=True, null=True, default=0.0)
     enable = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
     last_online = models.TimeField(blank=True, null=True)
@@ -13,9 +13,10 @@ class HiddifyUser(models.Model):
     package_days = models.IntegerField(blank=True, null=True)
     start_date = models.DateField(blank=True, null=True)
     telegram_id = models.CharField(max_length=256, blank=True, null=True)
-    usage_limit_GB = models.FloatField(blank=True, null=True)
+    usage_limit_GB = models.FloatField(blank=True, null=True, default=0.0)
     uuid = models.CharField(max_length=256, blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
+    comment = models.TextField(blank=True, null=True)
     
     class Meta:
         verbose_name = 'HiddifyUser'

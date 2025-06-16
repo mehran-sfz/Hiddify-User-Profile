@@ -89,9 +89,7 @@ class Profile(models.Model):
     is_active = models.BooleanField(default=False)
     
     avatar = models.ImageField(blank=True, upload_to='profile_avatars/')
-    
-    telegram_id = models.CharField(max_length=255, blank=True, null=True)
-    
+        
     wallet = models.PositiveIntegerField(default=0)
 
     def __str__(self):
@@ -99,14 +97,18 @@ class Profile(models.Model):
     
     def save(self, *args, **kwargs):
         
-        # Check if the user was invited by someone
-        if self.invited_by:
-            try:
-                inviter_profile = Profile.objects.get(invite_code=self.invited_by) # Get the inviter's profile
-            except Profile.DoesNotExist:
-                raise ValueError('There is no user by this invite code')
+        # # Check if the user was invited by someone
+        # if self.invited_by:
+        #     try:
+        #         inviter_profile = Profile.objects.get(invite_code=self.invited_by) # Get the inviter's profile
+        #     except Profile.DoesNotExist:
+        #         raise ValueError('There is no user by this invite code')
             
-            if inviter_profile.is_active: # Check if the inviter's profile is active
+        #     # Set the invited_by field to the inviter's user
+        #     self.invited_by = inviter_profile.user
+        
+        if self.invited_by:
+            if self.invited_by.is_active: # Check if the inviter's profile is active
                 self.is_active = True # Set the new user's profile as active
 
         if not self.invite_code: # If the user does not have an invite code
