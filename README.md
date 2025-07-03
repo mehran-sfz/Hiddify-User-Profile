@@ -561,7 +561,7 @@ docker exec -it hiddify-app python manage.py createsuperuser
 ![برگه خانه کاربر](https://github.com/mehran-sfz/Hiddify-User-Profile/blob/main/screenshots/user_home.png?raw=true)
 
 برگه اضافه یا خرید کاربر:
-![برگه اضافه یا خرید کاربر](https://github.com/mehran-sfz/Hiddify-User-Profile/blob/main/screenshots/user_buy_and_add.png?raw=true)
+![برگه اضافه یا خرید کاربر](https://github.com/mehran-sfz/Hiddify-User-Profile/blob/main/screenshots/user_buy_ and_add.png?raw=true)
 
 
 برگه خانه ادمین:
