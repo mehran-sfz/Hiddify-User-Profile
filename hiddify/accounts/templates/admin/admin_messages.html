@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  {% load static %}
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ادمین - پیام ها</title>
+    <link
+      rel="shortcut icon"
+      href="{% static 'logo/batman_logo_y.png' %}"
+      type="image/x-icon"
+    />
+
+    <!-- Import Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Custom CSS -->
+    <link href="{% static 'css/admin.css' %}" rel="stylesheet" />
+  </head>
+
+  <body class="p-4" style="overflow-y: auto">
+    <!-- Alert Messages -->
+    {% include "includes/alert.html" %}
+    {% include "includes/admin/navigation.html" %}
+
+    <!-- Inline Form Section To add and edit plans -->
+    <section id="addPlanForm" class="ftco-section">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-12">
+          <!-- Form HTML -->
+          <form
+            class="table-wrap form-inline"
+            id="messageForm"
+            action="{% url 'send-message-to-all' %}"
+            method="POST"
+          >
+            {% csrf_token %}
+            <h2 class="text" style="text-align: right; margin-bottom: 2rem;">
+              اضافه کردن پیام جدید
+            </h2>
+
+            <div class="form-group mb-3">
+              <div class="row">
+                <!-- Title Input -->
+                <div class="col-md-4 mb-3">
+                  <label for="title" class="form-label ms-2">عنوان</label>
+                  <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    class="form-control"
+                    placeholder="عنوان پیام را اینجا وارد کنید"
+                    maxlength="100"
+                    required
+                  />
+                </div>
+
+                <!-- Content Input -->
+                <div class="col-md-8 mb-3">
+                  <label for="content" class="form-label ms-2">متن</label>
+                  <textarea
+                    id="content"
+                    name="content"
+                    class="form-control"
+                    placeholder="متن پیام را اینجا وارد کنید"
+                    rows="3"
+                    maxlength="500"
+                    required
+                  ></textarea>
+                </div>
+              </div>
+
+              <!-- Button -->
+              <div class="row">
+                <div class="col-md-12 d-flex justify-content-end">
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="openModalButton"
+                  >
+                    اضافه کردن
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+          </div>
+        </div>
+      </div>
+      {% include "includes/footer.html" %}
+    </section>
+
+    <!-- Table Section for Orders -->
+    <section id="ordersTable" class="ftco-section">
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-12">
+              <div class="table-wrap table-responsive">
+                <table class="table table-hover custom-table">
+                  <h2>پیام ها</h2>
+                  <thead>
+                    <tr>
+                      <th>شماره</th>
+                      <th>عنوان</th>
+                      <th>متن</th>
+                      <th>وضعیت</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for admin_message in admin_messages %}
+                    <tr>
+                      <th scope="row">{{ admin_message.pk }}</th>
+                      <td>{{ admin_message.title }}</td>
+                      <td>{{ admin_message.content }}</td>
+                      <td>
+                        <a
+                        href="{% url 'admin-message-active' pk=admin_message.pk %}"
+                        class="{% if admin_message.status %}toggle-active{% else %}toggle-inactive{% endif %}"
+                      >
+                        <i
+                          class="bi bi-toggle-on"
+                        ></i>
+                      </a>
+                      </td>
+                    </tr>
+  
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    
+    
+      {% include "includes/footer.html" %}
+
+    <!-- Modal HTML -->
+    <div
+      class="modal fade"
+      id="confirmAddModal"
+      tabindex="-1"
+      aria-labelledby="confirmAddModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="confirmAddModalLabel">تایید اضافه</h5>
+          </div>
+          <div class="modal-body">آیا از اضافه کردن پیام مطمئن هستید؟</div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              لغو
+            </button>
+            <button type="button" class="btn btn-danger" id="confirmSubmitButton">
+              بله، مطمئنم
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </body>
+</html>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/script.js' %}"></script>
+
+<style>
+  /* Custom CSS for spacing */
+  .navbar-nav .nav-item {
+    margin-right: 15px; /* Spacing for large screens */
+  }
+
+  /* For small screens (max-width: 768px) */
+  @media (max-width: 768px) {
+    .navbar-nav .nav-item {
+      margin-right: 10px; /* Adjust spacing for small screens */
+      margin-bottom: 10px; /* Add vertical space for stacked buttons */
+    }
+    
+  }
+
+  /* For active (True) state: Green with red hover */
+  .toggle-active i {
+    color: green;
+    font-size: 2rem; /* Adjust the size as needed */
+  }
+  .toggle-active:hover i {
+    color: red;
+  }
+
+  /* For inactive (False) state: Red with green hover */
+  .toggle-inactive i {
+    color: red;
+    font-size: 2rem; /* Adjust the size as needed */
+  }
+  .toggle-inactive:hover i {
+    color: green;
+  }
+</style>
+
+
+<script>
+  // Get the modal and the form
+  const openModalButton = document.getElementById("openModalButton");
+  const confirmSubmitButton = document.getElementById("confirmSubmitButton");
+  const messageForm = document.getElementById("messageForm");
+  const confirmAddModal = new bootstrap.Modal(document.getElementById('confirmAddModal'));
+
+  // Add event listener to the open modal button
+  openModalButton.addEventListener("click", function () {
+    // Check if the form is valid
+    if (messageForm.checkValidity()) {
+      // If valid, show the modal
+      confirmAddModal.show();
+    } else {
+      // If not valid, display the validation errors
+      messageForm.reportValidity();
+    }
+  });
+
+  // Add event listener to the confirm button inside the modal
+  confirmSubmitButton.addEventListener("click", function () {
+    // Submit the form when the user confirms
+    messageForm.submit();
+  });
+</script>
+

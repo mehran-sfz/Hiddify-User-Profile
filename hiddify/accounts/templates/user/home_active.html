@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+{% load static %}
+{% load custom_filters %}
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>خانه</title>
+  <link rel="shortcut icon" href="{% static 'logo/batman_logo_y.png' %}" type="image/x-icon">
+
+
+  <!-- Import Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  
+
+  <!-- Custom CSS -->
+  <link href="{% static 'css/base.css' %}" rel="stylesheet" />
+</head>
+
+<body class="p-4" style="overflow-y: auto;">
+
+  <!-- Navigation Bar -->
+  {% include "includes/user/navigation.html" %}
+
+  <div class="container mt-5 pt-5">
+  <div class="row g-4">
+  {% for config in data.config %}
+  {% if config.comment != 'deleted' %}
+  {% include "includes/user/cards.html" %}
+  {% endif %}
+  {% endfor %}
+  </div>
+  </div>
+
+  <!-- Alert Message -->
+  {% include "includes/footer.html" %}
+  {% include "includes/user/messages.html" %}
+  {% include "includes/alert.html" %}
+</body>
+
+</html>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/script.js' %}"></script>
+
+<!-- Script to automatically show modal if there are admin messages -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        {% if message_to_users %}
+        console.log('Admin message exists');
+        var adminMessageModal = new bootstrap.Modal(
+            document.getElementById("adminMessageModal"),
+            { backdrop: 'static', keyboard: true } // setting backdrop to static prevents closing on outside click
+        );
+        adminMessageModal.show();
+
+        // make sure the body does not scroll when the modal is open
+        document.getElementById("adminMessageModal").addEventListener('hidden.bs.modal', function () {
+            document.body.style.overflow = 'auto'; // open body scroll
+        });
+        {% else %}
+        console.log('No admin message found');
+        {% endif %}
+    });
+</script>
+
+

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  {% load static %}
+  {% load custom_filters %}
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>سفارش ها</title>
+    <link
+      rel="shortcut icon"
+      href="{% static 'logo/batman_logo_y.png' %}"
+      type="image/x-icon"
+    />
+
+    <!-- Import Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    
+
+    <!-- Custom CSS -->
+    <link href="{% static 'css/orders.css' %}" rel="stylesheet" />
+  </head>
+
+  <body class="p-4" style="overflow-y: auto">
+    <!-- Navigation Bar -->
+    {% include "includes/user/navigation.html" %}
+
+    <!-- Alert Messages -->
+    {% include "includes/alert.html" %}
+
+    <!-- Table Section -->
+    <section class="ftco-section">
+      <div class="container mt-5">
+        <div class="row justify-content-center">
+          <div class="col-md-6 text-center mb-5">
+            <h2 class="heading-section">سفارشات</h2>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="table-wrap table-responsive">
+              <table class="table table-hover custom-table">
+                <thead>
+                  <tr>
+                    <th>شماره</th>
+                    <th>کانفیگ</th>
+                    <th>تاریخ سفارش</th>
+                    <th>پلن</th>
+                    <th>وضعیت پرداخت</th>
+                    <th>وضعیت سفارش</th>
+                    <th>گزینه ها</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for order in orders %}
+                  <tr>
+                    <th scope="row">{{ order.pk }}</th>
+                    <td>{{ order.name}}</td>
+                    <td>{{ order.created_date|to_jalali }}</td>
+                    <td>{{ order.plan }}</td>
+                    {% if order.status == True %}
+                    <td>
+                      <span class="badge text-bg-success text-wrap"
+                        >پرداخت شده</span
+                      >
+                    </td>
+                    {% elif order.order_payment and order.order_payment.validated is False %}
+                    <td>
+                      <span class="badge text-bg-info text-wrap"
+                        >درحال برسی فیش ارسالی</span
+                      >
+                    </td>
+                    {% else %}
+                    <td>
+                      <span class="badge text-bg-danger text-wrap"
+                        >پرداخت نشده</span
+                      >
+                    </td>
+                    {% endif %} {% if order.pending == True %}
+                    <td>
+                      <span class="badge text-bg-warning text-wrap"
+                        >رزرو شده</span
+                      >
+                    </td>
+                    {% else %}
+                    <td>
+                      <span class="badge text-bg-dark text-wrap"
+                        >اعمال شده</span
+                      >
+                    </td>
+                    {% endif %}
+                    <td>
+                      {% if order.status is False and order.pending is True and not order.order_payment %}
+                      <form
+                        class="d-inline"
+                        action="{% url 'deleteorder' %}"
+                        method="post"
+                      >
+                        {% csrf_token %}
+                        <input
+                          type="hidden"
+                          name="order_pk"
+                          value="{{ order.pk }}"
+                        />
+                        <button
+                          type="submit"
+                          class="btn btn-outline-danger btn-click"
+                        >
+                          لغو
+                        </button>
+                      </form>
+                      {% endif%}
+                      {% if order.status is False and not order.order_payment %}
+                      <a
+                        href="javascript:void(0);"
+                        class="btn btn-outline-success btn-click toggle-details"
+                        data-target="#paymentDetails{{ order.pk }}"
+                        >پرداخت</a
+                      >
+                      {% elif order.status is True or order.order_payment %}
+                      <a
+                        href="javascript:void(0);"
+                        class="btn btn-outline-primary btn-click toggle-details"
+                        data-target="#paymentDetails{{ order.pk }}"
+                        >جزئیات پرداخت</a
+                      >
+                      {% endif %}
+                    </td>
+                  </tr>
+
+                  <!-- Hidden Payment Details Row -->
+                  <tr
+                    id="paymentDetails{{ order.pk }}"
+                    class="payment-details-row"
+                    style="display: none"
+                  >
+                    <td colspan="7">
+                      <div class="payment-details">
+                        {% if order.order_payment %}
+                        <p>
+                          <strong>تاریخ پرداخت:</strong>
+                          {{ order.order_payment.created_date|to_jalali }}
+                        </p>
+                        <p>
+                          <strong>لینک تصویر رسید:</strong>
+                          <a
+                            href="{{ order.order_payment.screenshot.url }}"
+                            target="_blank"
+                            >مشاهده رسید</a
+                          >
+                        </p>
+                        {% if order.order_payment.tracking_code %}
+                        <p>
+                          <strong>کد پیگیری:</strong>
+                          {{ order.order_payment.tracking_code }}
+                        </p>
+                        {% endif %}
+                        <p>
+                          <strong>وضعیت اعتبار:</strong>
+                          {% if order.order_payment.validated %}
+                          <span class="badge text-bg-success">تأیید شده</span>
+                          {% else %}
+                          <span class="badge text-bg-danger">تأیید نشده</span>
+                          {% endif %}
+                        </p>
+                        {% else %}
+                        <form
+                          action="{% url 'submit-payment' %}"
+                          method="POST"
+                          enctype="multipart/form-data"
+                        >
+                          {% csrf_token %}
+                          <!-- Hidden Field for Order PK and Config uuid -->
+                          <input
+                            type="hidden"
+                            name="order_pk"
+                            value="{{ order.pk }}"
+                          />
+                          <input
+                            type="hidden"
+                            name="config_uuid"
+                            value="{{ order.config.uuid }}"
+                          />
+                          <!-- Payment Code -->
+                          <div class="form-group mb-2">
+                            <label for="TrackingCode">کد پیگیری</label>
+                            <input
+                              type="text"
+                              name="tracking_code"
+                              class="form-control"
+                              id="TrackingCode"
+                              placeholder="کد پیگیری پرداخت را وارد کنید"
+                            />
+                          </div>
+
+                          <!-- Upload Payment Picture -->
+                          <div class="form-group mb-2">
+                            <label for="paymentPicture">فیش پرداخت</label>
+                            <input
+                              type="file"
+                              name="payment_picture"
+                              class="form-control"
+                              id="paymentPicture"
+                              required
+                            />
+                          </div>
+
+                          <!-- Submit and Cancel Buttons -->
+                          <button type="submit" class="btn btn-primary">
+                            ارسال
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-secondary toggle-details"
+                            data-target="#paymentDetails{{ order.pk }}"
+                          >
+                            لغو
+                          </button>
+                        </form>
+
+                        {% endif %}
+                      </div>
+                    </td>
+                  </tr>
+
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    {% include "includes/footer.html" %}
+
+    <!-- Bootstrap JS and Custom Script -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/script.js' %}"></script>
+  </body>
+</html>

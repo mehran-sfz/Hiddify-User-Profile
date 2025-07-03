@@ -1,0 +1,69 @@
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg custom-navbar navbar-light bg-light">
+    <div class="container-fluid justify-content-between">
+        <!-- Navbar Toggler for mobile view -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Navbar Content (collapsible) -->
+        <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
+            <!-- Left-aligned items -->
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="{% url 'home' %}">خانه</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="{% url 'orders' %}">سفارشات</a>
+                </li>
+            </ul>
+
+            <!-- Right-aligned 'Invite Code' and 'خروج' buttons -->
+            <ul class="navbar-nav">
+
+                {% if not telegram_id and telegram_bot_info %}
+                <!-- Telegram connection -->
+                <li class="nav-item space-between-sm">
+                    <a class="btn btn-dark btn-contact px-4 py-2" href="https://t.me/{{telegram_bot_info}}?start=uuid={{ user_uuid }}" target="_blank">اتصال به تلگرام</a>
+                </li>
+                {% endif %}
+
+                <!-- buy new config button -->
+                <li class="nav-item space-between-sm">
+                    <a class="btn btn-warning btn-contact px-4 py-2" href="{% url 'buyconfig' %}">خرید/اضافه</a>
+                </li>
+
+                <!-- Invite Code button styled like the 'خروج' button -->
+                <li class="nav-item space-between-sm">
+                    <a id="invite_code" class="btn btn-success btn-contact px-4 py-2" invite-code="{{ invite_code }}">
+                        کد دعوت: {{ invite_code }}
+                    </a>
+                </li>
+
+                <!-- 'خروج' button -->
+                <li class="nav-item space-between-sm">
+                    <a class="btn btn-danger btn-contact px-4 py-2" href="{% url 'logout' %}">خروج</a>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+</nav>
+
+
+
+<style>
+    /* Custom CSS for spacing */
+    .navbar-nav .nav-item {
+        margin-right: 15px; /* Spacing for large screens */
+    }
+
+    /* For small screens (max-width: 768px) */
+    @media (max-width: 768px) {
+        .navbar-nav .nav-item {
+            margin-right: 10px; /* Adjust spacing for small screens */
+            margin-bottom: 10px; /* Add vertical space for stacked buttons */
+        }
+    }
+</style>

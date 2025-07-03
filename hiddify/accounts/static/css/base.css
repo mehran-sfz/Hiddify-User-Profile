@@ -1,0 +1,372 @@
+@font-face {
+  font-family: "Yekan";
+  src: url("font/B_Yekan/Yekan.ttf") format("truetype");
+}
+
+#alert-box {
+  margin-top: 60px; /* Adjust this value based on your navbar height */
+}
+
+/* --------------- Body ------------------- */
+
+body {
+  background: url("images/batman-pattern1.png") repeat;
+  background-position: center;
+  font-family: "Yekan", sans-serif;
+  position: relative;
+  min-height: 100vh;
+  z-index: 2;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0; 
+  background-color: rgba(31, 31, 31, 0.3);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* -------------------------- Card --------------------------  */
+
+.pt-5 {
+  padding-top: 1rem !important;
+}
+
+.mt-5 {
+  margin-top: 1rem !important;
+}
+
+.card {
+  background-color: #ffffffa4;
+  margin: 10px;
+  border-radius: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.card-header:first-child {
+  border-radius: 30px;
+}
+
+.card-header {
+  background-color: #ffffff;
+  padding-inline: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  margin: 10px;
+}
+
+.card-header-shadow-success {
+  box-shadow: 0px 0px 15px 3px rgb(9 255 0 / 56%);
+}
+
+.card-header-shadow-warning {
+  box-shadow: 0px 0px 15px 3px rgb(235 255 0 / 56%);
+}
+
+.card-header-shadow-danger {
+  box-shadow: 0px 0px 15px 3px rgb(255 0 0 / 56%);
+}
+
+.card-body {
+  background-color: #ffffff;
+  padding: 30px;
+  padding-inline: 30px;
+  border-radius: 30px !important;
+  margin: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  align-items: stretch;
+  min-height: 200px;
+  max-height: none;
+  flex-wrap: nowrap;
+
+}
+
+.card-footer:last-child {
+  border-radius: 30px;
+}
+
+.card-footer {
+  background-color: #ffffff;
+  padding-inline: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  margin: 10px;
+}
+
+.deleted-config .card {
+  border: 2px solid black;
+  opacity: 0.7;
+}
+
+.deleted-config .card-title,
+.deleted-config .card-text,
+.deleted-config .badge {
+  text-decoration: line-through;
+}
+
+.thumbnail-image {
+  border-radius: 10px !important;
+}
+
+/* -------------------------- End Card -------------------------- */
+
+.btn-click {
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.btn-click:hover {
+  color: #fff !important;
+}
+
+#paymentFormView {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* ------------------ Qr code ------------------ */
+.img-fluid {
+    max-width: 45% !important;
+  }
+
+@media (max-width: 768px) {
+  .card-body {
+    flex-direction: column;
+    align-items: center;
+    max-height: none;
+    flex-wrap: inherit;
+  }
+
+  #paymentFormView {
+    max-width: 100%;
+    padding: 15px;
+  }
+
+  .thumbnail-image {
+    margin-top: 20px;
+  }
+
+  .form-container {
+    padding: 20px;
+  }
+
+  .qr-code-image {
+      max-width: 60%;
+      margin-top: 15px;
+    }
+
+  .qr-code-caption {
+      font-size: 0.7rem;
+    }
+    
+  .img-fluid {
+    max-width: 75% !important;
+    height: auto;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .mb-3 {
+    text-align: center;
+  }
+
+}
+
+.qr-code-image {
+  max-width: 75%;
+  height: auto;
+  cursor: pointer;
+}
+.qr-code-caption {
+  font-size: 0.8rem;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0 !important;
+}
+.thumbnail-image {
+  margin-top: 20px;
+}
+
+.form-container {
+  max-width: 420px;
+  font-family: "Yekan", sans-serif;
+}
+
+
+
+
+.header {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20px;
+  font-family: "IRANSans", sans-serif;
+}
+
+/* --------------- Navbar ------------------- */
+
+.navbar {
+  font-family: "Yekan", sans-serif;
+  font-size: 1rem;
+  background-color: rgba(255, 255, 255, 0.75);
+  padding: 10px 20px;
+  border-radius: 20px;
+  margin: 0;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: relative; /* Needed for positioning the menu button */
+}
+
+/* Navbar brand styling */
+.navbar-brand {
+  font-size: 1.5rem;
+  color: #ff723b !important;
+  letter-spacing: 1px;
+}
+
+.navbar-brand:hover {
+  color: #ffffff !important;
+  text-shadow: 0 0 10px rgba(255, 114, 59, 0.8);
+}
+
+/* Nav link styling */
+.nav-link {
+  font-size: 1.1rem;
+  padding: 10px 15px;
+  color: #2c2c2c !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-link:hover {
+  color: #ff723b !important;
+  text-decoration: none;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+}
+
+.navbar-nav {
+  margin-left: auto;
+}
+
+/* Menu button styling (hamburger) */
+.navbar-toggler {
+  border: none;
+  background-color: rgb(100, 100, 100); /* Dark gray for contrast on white navbar */
+  padding: 10px 15px;
+  border-radius: 5px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease,
+    transform 0.2s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Subtle shadow */
+}
+
+/* Add glow and shine effect on hover */
+.navbar-toggler:hover {
+  background-color: rgb(80, 80, 80); /* Slightly lighter on hover */
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6), 0 4px 10px rgba(0, 0, 0, 0.2); /* Soft blue glow */
+  transform: scale(1.05); /* Slight scaling for a hover effect */
+}
+
+/* Optional: active state */
+.navbar-toggler:active {
+  background-color: rgb(60, 60, 60); /* Darker shade when pressed */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); /* Reduced shadow when pressed */
+  transform: scale(0.98); /* Button presses slightly inward */
+}
+
+/* Contact button style */
+.btn-contact {
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.btn-contact:hover {
+  color: #fff !important;
+}
+
+/* Contact button style */
+.btn-click {
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.btn-click:hover {
+  color: #fff !important;
+}
+
+/* Remove padding/margins from ul */
+.navbar-nav {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+/* Navbar mobile view settings */
+.navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba(255,255,255,0.7)' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+
+/* -------------- End Navbar ---------------- */
+
+
+.form-group {
+  align-items: center;
+}
+
+
+/* ------------------ buy section ------------------ */
+
+/* استایل سفارشی برای کارت‌های فرم */
+.form-card {
+  border: none; /* حذف حاشیه پیش‌فرض کارت */
+}
+
+/* استایل سفارشی برای بدنه کارت */
+.form-card-body {
+  padding: 1.5rem; /* پدینگ داخلی منطقی */
+  min-height: 250px; /* حداقل ارتفاع برای زیبایی ظاهری */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+.form-card-header {
+  text-align: center;
+}
+
+.p-4 {
+  padding: 0.3rem !important;
+}
+
+.container {
+  --bs-gutter-x: 0 !important; /* حذف فاصله افقی بین ستون‌ها */
+}
+
+.row {
+  --bs-gutter-x : 0 !important; /* حذف فاصله افقی بین ستون‌ها */
+}

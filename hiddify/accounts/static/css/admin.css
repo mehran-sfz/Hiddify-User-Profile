@@ -1,0 +1,238 @@
+@font-face {
+  font-family: "Yekan";
+  src: url("font/B_Yekan/Yekan.ttf") format("truetype");
+}
+
+#alert-box {
+  margin-top: 60px; /* Adjust this value based on your navbar height */
+}
+
+/* --------------- Body ------------------- */
+
+body {
+  background: url("images/batman-pattern1.png") repeat;
+  background-position: center;
+  font-family: "Yekan", sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  position: relative; /* Ensure the body is the parent for ::before */
+  overflow-x: hidden; /* Only hide horizontal overflow if needed */
+}
+
+body::before {
+  content: "";
+  position: fixed; /* Make the overlay cover the entire viewport */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(31, 31, 31, 0.3); /* Dark overlay */
+  pointer-events: none; /* Prevent interaction with the overlay */
+  z-index: 0; /* Ensure it stays behind other elements */
+}
+
+/* --------------- Navbar ------------------- */
+
+.navbar {
+  font-family: "Yekan", sans-serif;
+  font-size: 1rem;
+  background-color: rgba(255, 255, 255, 0.75);
+  padding: 10px 20px;
+  border-radius: 20px;
+  margin: 0;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: relative; /* Needed for positioning the menu button */
+  z-index: 10; /* Ensure navbar stays above the container and background */
+}
+
+/* Navbar brand styling */
+.navbar-brand {
+  font-size: 1.5rem;
+  color: #ff723b !important;
+  letter-spacing: 1px;
+}
+
+.navbar-brand:hover {
+  color: #ffffff !important;
+  text-shadow: 0 0 10px rgba(255, 114, 59, 0.8);
+}
+
+/* Nav link styling */
+.nav-link {
+  font-size: 1.1rem;
+  padding: 10px 15px;
+  color: #2c2c2c !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-link:hover {
+  color: #ff723b !important;
+  text-decoration: none;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+}
+
+.navbar-nav {
+  margin-left: auto;
+}
+
+/* Menu button styling (hamburger) */
+.navbar-toggler {
+  border: none;
+  background-color: rgb(
+    100,
+    100,
+    100
+  ); /* Dark gray for contrast on white navbar */
+  padding: 10px 15px;
+  border-radius: 5px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease,
+    transform 0.2s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Subtle shadow */
+}
+
+/* Add glow and shine effect on hover */
+.navbar-toggler:hover {
+  background-color: rgb(80, 80, 80); /* Slightly lighter on hover */
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6), 0 4px 10px rgba(0, 0, 0, 0.2); /* Soft blue glow */
+  transform: scale(1.05); /* Slight scaling for a hover effect */
+}
+
+/* Optional: active state */
+.navbar-toggler:active {
+  background-color: rgb(60, 60, 60); /* Darker shade when pressed */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); /* Reduced shadow when pressed */
+  transform: scale(0.98); /* Button presses slightly inward */
+}
+
+/* Contact button style */
+.btn-contact {
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.btn-contact:hover {
+  color: #fff !important;
+}
+
+/* Contact button style */
+.btn-click {
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.btn-click:hover {
+  color: #fff !important;
+}
+
+/* Remove padding/margins from ul */
+.navbar-nav {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+/* Navbar mobile view settings */
+.navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba(255,255,255,0.7)' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+
+/* -------------- End Navbar */
+
+.container {
+  margin-top: 60px; /* Adjust this value based on your navbar height */
+  position: relative; /* This ensures the z-index works */
+  z-index: 1; /* Lower than the navbar */
+}
+
+.heading-section {
+  padding-top: 25px;
+  font-size: 3.5rem;
+  color: white;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.table-wrap {
+  background-color: white;
+  text-align: center;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.custom-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  padding: 1rem;
+  text-align: center;
+  vertical-align: middle;
+  background-color: #ffffff00;
+  overflow: hidden;
+}
+
+.custom-table td {
+  padding: 1rem;
+  text-align: center;
+  vertical-align: middle;
+  background-color: #ffffff; /* White background for cells */
+  overflow: hidden;
+  /* Removed border-radius here */
+}
+
+.custom-table tbody tr {
+  transition: background-color 0.2s ease;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* Add a subtle shadow to the row */
+  overflow: hidden; /* Ensure rounded corners are respected */
+  border-radius: 10px; /* Rounded corners for the entire row */
+}
+
+/* برای اضافه کردن سایه به ردیف‌ها */
+.table-striped tbody tr {
+  transition: box-shadow 0.3s ease;
+  text-align: center;
+}
+
+.table-striped tbody tr:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* سایه هنگام هاور */
+}
+
+/* Menu */
+/* Enable dropdown on hover */
+#hoverDropdown:hover .dropdown-menu {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Ensure the dropdown stays above other containers */
+.dropdown-menu {
+  position: absolute;
+  text-align: right; /* Right-align dropdown items */
+  z-index: 1050; /* Ensure it appears above other elements */
+}
+
+/* Optional: Styling to ensure smooth appearance on hover */
+#hoverDropdown .dropdown-menu {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Add some padding or margin around the dropdown items to avoid overlap */
+.dropdown-item {
+  margin-bottom: 5px;
+}

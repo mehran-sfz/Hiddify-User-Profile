@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  {% load static %}
+  {% load custom_filters %}
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ادمین - کانفیگ ها</title>
+    <link
+      rel="shortcut icon"
+      href="{% static 'logo/batman_logo_y.png' %}"
+      type="image/x-icon"
+    />
+
+    <!-- Import Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+
+    <!-- Custom CSS -->
+    <link href="{% static 'css/admin.css' %}" rel="stylesheet" />
+  </head>
+
+  <body class="p-4" style="overflow-y: auto">
+    <!-- Alert Messages -->
+    {% include "includes/alert.html" %}
+    {% include "includes/admin/navigation.html" %}
+
+    <!-- Table Section for Orders -->
+    <section id="ordersTable" class="ftco-section">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-12">
+            <div class="table-wrap table-responsive">
+              <table class="table table-hover custom-table">
+                <h2>کانفیگ ها</h2>
+
+                <form method="get" action="{% url 'admin-panel-configs' %}">
+                    <div class="form-group">
+                        <select class="form-control col-md-3 mb-2" name="filter" onchange="this.form.submit()">
+                            <option value="all" {% if filter != 'active' and filter != 'inactive' %}selected{% endif %}>همه</option>
+                            <option value="active" {% if filter == 'active' %}selected{% endif %}>فعال</option>
+                            <option value="inactive" {% if filter == 'inactive' %}selected{% endif %}>غیرفعال</option>
+                            <option value="package_ended" {% if filter == 'package_ended' %}selected{% endif %}>تمام شدن بسته</option>
+                        </select> 
+                    </div> 
+                </form>
+
+                <thead>
+                  <tr>
+                    <th>نام</th>
+                    <th>وضعیت</th>
+                    <th>uuid</th>
+                    <th>تاریخ شروع</th>
+                    <th>مدت زمان</th>
+                    <th>ترافیک</th>
+                    <th>گزینه‌ها</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for config in configs %}
+                  <tr>
+                    <td>{{ config.name }}</td>
+
+                    <td>
+                        {% if config.enable == True and config.is_active == True %}
+                        <span class="badge bg-success">فعال</span>
+
+                        {% elif config.enable == True and config.is_active == False %}
+                        <span class="badge bg-warning">تمام شده</span>
+
+                        {% else %}
+                        <span class="badge bg-danger">چک شود</span>
+                        
+                        {% endif %}
+                      </td>
+
+                    <td>{{ config.uuid }}</td>
+
+                    
+                    {% if config.start_date %}
+                    <td>{{ config.start_date }}</td>
+                    {% else %}
+                    <td>
+                      <span class="badge bg-warning">استفاده نشده</span>
+                    </td>
+                    {% endif %}
+
+                    <td>{{ config.package_days }}</td>
+                    <td>{{ config.usage_limit_GB }}</td>
+                    <td>
+                    <!-- Form Enable/Disable -->
+                    <form action="{% url 'admin-panel-configs' %}" method="POST" class="confirmable-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="on_off" />
+                        <input type="hidden" name="hidify_user_uuid" value="{{ config.uuid }}" />
+                        <button class="btn btn-outline-danger" type="button" onclick="showConfirmModal(this);">
+                            فعال/غیرفعال
+                        </button>
+                    </form>
+                    </td>
+                  </tr>
+
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+
+
+
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="confirmActionModal" tabindex="-1" aria-labelledby="confirmActionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmActionModalLabel">تایید عملیات</h5>
+                </div>
+                <div class="modal-body">
+                    آیا از انجام این عملیات اطمینان دارید؟
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">لغو</button>
+                    <button type="button" class="btn btn-danger" id="confirmActionButton">بله، مطمئنم</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include "includes/footer.html" %}
+
+  </body>
+</html>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/script.js' %}"></script>
+
+<style>
+  /* Custom CSS for spacing */
+  .navbar-nav .nav-item {
+    margin-right: 15px; /* Spacing for large screens */
+  }
+
+  /* For small screens (max-width: 768px) */
+  @media (max-width: 768px) {
+    .navbar-nav .nav-item {
+      margin-right: 10px; /* Adjust spacing for small screens */
+      margin-bottom: 10px; /* Add vertical space for stacked buttons */
+    }
+  }
+</style>
+
+
+<script>
+    let formToSubmit = null;
+
+    function showConfirmModal(button) {
+        // Find the closest form to the clicked button
+        formToSubmit = button.closest('form');
+        // Show the modal
+        const confirmModal = new bootstrap.Modal(document.getElementById('confirmActionModal'));
+        confirmModal.show();
+    }
+
+    // Confirm button in the modal
+    document.getElementById('confirmActionButton').addEventListener('click', function () {
+        if (formToSubmit) {
+            // Hide the modal first
+            const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmActionModal'));
+            confirmModal.hide();
+
+            // Submit the form after hiding the modal
+            formToSubmit.submit();
+        }
+    });
+</script>
+
+  

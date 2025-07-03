@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  {% load static %}
+  {% load custom_filters %}
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ادمین - کاربرها</title>
+    <link
+      rel="shortcut icon"
+      href="{% static 'logo/batman_logo_y.png' %}"
+      type="image/x-icon"
+    />
+
+    <!-- Import Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+
+    <!-- Custom CSS -->
+    <link href="{% static 'css/admin.css' %}" rel="stylesheet" />
+  </head>
+
+  <body class="p-4" style="overflow-y: auto">
+    <!-- Alert Messages -->
+    {% include "includes/alert.html" %}
+    {% include "includes/admin/navigation.html" %}
+
+    <!-- Table Section for Orders -->
+    <section id="ordersTable" class="ftco-section">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-12">
+            <div class="table-wrap table-responsive">
+              <table class="table table-hover custom-table">
+                <h2>کاربرها</h2>
+                <thead>
+                  <tr>
+                    <th>شماره تماس</th>
+                    <th>نام و نام خانوادگی</th>
+                    <th>کد دعوت</th>
+                    <th>دعوت کننده</th>
+                    <th>وضعیت اکانت</th>
+                    <th>گزینه‌ها</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for profile in profiles %}
+                  <tr>
+                    <td>{{ profile.user.phone_number }}</td>
+                    <td>{{ profile.user.first_name }} {{ profile.user.last_name }}</td>
+                    <td>{{ profile.invite_code }}</td>
+
+                    <td>
+                    {% if profile.invited_by %}
+                        {{ profile.invited_by }}
+                    {% else %}
+                            <span class="badge bg-danger">دعوت نشده</span>
+                    {% endif %}
+                    </td>
+
+                    <td>
+                      {% if profile.is_active %}
+                      <span class="badge bg-success">فعال</span>
+                      {% else %}
+                      <span class="badge bg-danger">غیر فعال</span>
+                      {% endif %}
+                    </td>
+
+                    <td>
+                        <form class="d-inline" action="{% url 'admin-panel-users' %}" method="POST" onsubmit="return confirmDelete(this);">
+                            {% csrf_token %}
+                            <input type="hidden" name="user_pk" value="{{ profile.user.pk }}" />
+                            <button class="btn btn-outline-danger btn-click" type="submit">
+                                حذف کاربر
+                            </button>
+                        </form>
+                    </td>
+                    
+                  </tr>
+
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    {% include "includes/footer.html" %}
+  </body>
+</html>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/script.js' %}"></script>
+
+<style>
+  /* Custom CSS for spacing */
+  .navbar-nav .nav-item {
+    margin-right: 15px; /* Spacing for large screens */
+  }
+
+  /* For small screens (max-width: 768px) */
+  @media (max-width: 768px) {
+    .navbar-nav .nav-item {
+      margin-right: 10px; /* Adjust spacing for small screens */
+      margin-bottom: 10px; /* Add vertical space for stacked buttons */
+    }
+  }
+</style>
+
+<script>
+    function confirmDelete(form) {
+        if (confirm('آیا از حذف این کاربر مطمئن هستید؟')) {
+            // Create a hidden input to specify the action
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'action';
+            input.value = 'DELETE'; // Indicate the action to be DELETE
+
+            // Append the input to the form
+            form.appendChild(input); // Append to the form passed as a parameter
+            return true; // Allow the form to submit
+        }
+        return false; // Prevent form submission
+    }
+</script>
