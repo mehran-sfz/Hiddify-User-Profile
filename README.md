@@ -1,7 +1,7 @@
 # 🌐 پروفایل هیدیفای
 
   
-
+<div dir="rtl">
   
 
 **پروفایل هیدیفای** یک وبسایت واسطه است که با استفاده از API **Hiddify** به کاربران این امکانات را ارائه می‌دهد:  
@@ -528,3 +528,7 @@ docker exec -it hiddify-app python manage.py createsuperuser
 
 برگه خانه ادمین:
 ![برگه خانه ادمین](https://github.com/mehran-sfz/Hiddify-User-Profile/blob/main/screenshots/admin_home.png?raw=true)
+
+
+
+</div>
