@@ -100,6 +100,8 @@
 
 2. 🖥 **یک سرور VPS**
 
+3. 📦 **نصب داکر و docker compose**
+
   
 
   
@@ -144,7 +146,7 @@ sudo apt-get update && sudo apt-get upgrade -y
 
 ```bash
 
-git clone https://github.com/mehran-sfz/Hiddify-Profile.git
+git clone https://github.com/mehran-sfz/Hiddify-User-Profile.git
 
 ```
 
@@ -156,7 +158,7 @@ git clone https://github.com/mehran-sfz/Hiddify-Profile.git
 
 ```bash
 
-cd Hiddify-Profile
+cd Hiddify-User-Profile
 
 ```
 
