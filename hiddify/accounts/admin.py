@@ -1,8 +1,7 @@
 from django.contrib import admin
 
+from .models import CustomUser, Profile
 
-from .models import Profile
-from .models import CustomUser
 
 @admin.register(CustomUser)
 class UserAdmin(admin.ModelAdmin):
@@ -17,7 +16,7 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ['user_phone_number', 'user_first_name', 'user_last_name', 'wallet', 'invited_by', 'invite_code', 'user_date_joined']
+    list_display = ['user_phone_number', 'user_first_name', 'user_last_name', 'wallet', 'invited_by', 'invite_code', 'config_limitation' ,'user_date_joined']
 
     # Method to display the user's phone number
     def user_phone_number(self, obj):
@@ -41,20 +40,5 @@ class ProfileAdmin(admin.ModelAdmin):
         return obj.user.date_joined.strftime('%Y-%m-%d')
     user_date_joined.short_description = 'Date Joined'
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

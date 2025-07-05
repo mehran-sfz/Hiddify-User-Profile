@@ -1,25 +1,23 @@
-from django.shortcuts import render, redirect
-from django.views.generic import TemplateView
-from django.contrib.auth import authenticate, login, logout
-from django.contrib import messages
-from django.conf import settings
-from django.core.exceptions import ValidationError
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
-from task_manager.hiddify_actions import generate_qr_code, on_off_user
-from adminlogs.action import add_admin_log
-
-
-from django.db.models import Sum
-from accounts.models import Profile, CustomUser
-from client_actions.models import Config, Order
-from task_manager.models import HiddifyUser, HiddifyAccessInfo
-from plans.models import Plan, Bank_Information
-from adminlogs.models import AdminLog, Message
-from telegram_bot.models import Telegram_Bot_Info
-
 from datetime import date
+
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.core.exceptions import ValidationError
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db.models import Sum
+from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.views.generic import TemplateView
+
+from accounts.models import CustomUser, Profile
+from adminlogs.action import add_admin_log
+from adminlogs.models import AdminLog, Message
+from client_actions.models import Config, Order
+from plans.models import Bank_Information, Plan
+from task_manager.hiddify_actions import generate_qr_code, on_off_user
+from task_manager.models import HiddifyAccessInfo, HiddifyUser
+from telegram_bot.models import Telegram_Bot_Info
 
 # ------------------------------------ User Panel Views ------------------------------------#
 
@@ -164,6 +162,7 @@ def OrdersView(request):
         invite_code = request.user.profile.invite_code
 
         return render(request, 'user/orders.html', {'orders': orders, 'invite_code': invite_code})
+
 
 def AddinviteCodeView(request):
     if not request.user.is_authenticated:
@@ -374,6 +373,7 @@ class HomeView(TemplateView):
                 action=f'Error while getting bank information: {str(e)}', category='admin', user=request.user
             )
             return None
+
 
 def ByConfig(request):
 

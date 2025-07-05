@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Telegram_Bot_Info, Telegram_account
+
+from .models import Telegram_account, Telegram_Bot_Info
 
 
 @admin.register(Telegram_Bot_Info)

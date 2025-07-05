@@ -1,4 +1,3 @@
-<!-- Alert Messages -->
 {% if messages %}
 <div
   id="alert-box"
@@ -16,8 +15,7 @@
     {% else %}
     alert-info  
     {% endif %}
-    alert-dismissible fade show popup-alert"
-    role="alert"
+    alert-dismissible fade show popup-alert d-none"  role="alert"
   >
     <span>{{ message }}</span>
     <button

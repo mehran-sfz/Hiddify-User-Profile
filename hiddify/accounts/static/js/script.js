@@ -1,28 +1,40 @@
-// Function to clear all existing alerts
-function clearAlerts() {
-  var alertBoxes = document.querySelectorAll(".popup-alert");
-  alertBoxes.forEach(function (alertBox) {
-    var bsAlert = new bootstrap.Alert(alertBox);
-    bsAlert.close();
-  });
-}
-
-// Clear existing alerts and show new ones
 document.addEventListener("DOMContentLoaded", function () {
-  // Clear any existing alerts before showing new ones
-  clearAlerts();
+  // تمام المان‌های alert را که مخفی هستند پیدا کن
+  const alertBoxes = document.querySelectorAll(".popup-alert.d-none");
 
-  // Show new alerts and close them after 2 seconds
-  setTimeout(function () {
-    var alertBoxes = document.querySelectorAll(".popup-alert");
-    alertBoxes.forEach(function (alertBox) {
-      var bsAlert = new bootstrap.Alert(alertBox);
-      bsAlert.close();
-    });
-  }, 2000);
+  // مدت زمانی که هر پیام نمایش داده می‌شود (5 ثانیه)
+  const displayDuration = 5000;
+  
+  // فاصله زمانی بین نمایش هر پیام (مثلاً دو ثانیه)
+  const staggerDelay = 2000;
+
+  // به ازای هر alert یک عملیات زمان‌بندی شده انجام بده
+  alertBoxes.forEach((alertBox, index) => {
+    
+    // محاسبه تاخیر برای نمایش این پیام بر اساس ترتیب آن
+    // پیام اول: 0 * 500 = 0 میلی‌ثانیه تاخیر
+    // پیام دوم: 1 * 500 = 500 میلی‌ثانیه تاخیر
+    // و الی آخر...
+    const showDelay = index * staggerDelay;
+
+    // یک تایمر برای نمایش پیام تنظیم کن
+    setTimeout(() => {
+      // کلاس d-none را حذف کن تا پیام با افکت fade نمایش داده شود
+      alertBox.classList.remove("d-none");
+
+      // حالا که پیام نمایش داده شد، یک تایمر دیگر برای بستن آن تنظیم کن
+      setTimeout(() => {
+        // از API خود بوت‌استرپ برای بستن استفاده کن تا افکت fade-out اجرا شود
+        const bsAlert = new bootstrap.Alert(alertBox);
+        if (bsAlert) {
+          bsAlert.close();
+        }
+      }, displayDuration); // این تایمر ۲ ثانیه بعد از نمایش، اجرا می‌شود
+
+    }, showDelay); // این تایمر با تاخیر محاسبه‌شده اجرا می‌شود
+  });
 });
 
-// Copy Link to Clipboard Script
 // Function to copy the link to clipboard
 function copyLinkToClipboard(link) {
   // Create a temporary input element to hold the link
@@ -88,6 +100,8 @@ function toggleEditForm() {
 }
 
 
+// Function to show the payment form for a specific card
+// This function hides the default view and shows the payment form for the specified card ID
 function showPaymentForm(cardId) {
   document.getElementById('defaultView_' + cardId).style.display = 'none';
   document.getElementById('paymentFormView_' + cardId).style.display = 'block';
@@ -120,8 +134,6 @@ function togglePaymentForm(counter) {
   }
 }
 
-
-
 function cancelPaymentForm(counter) {
   const paymentForm = document.getElementById(`paymentFormView_${counter}`);
   const defaultView = document.getElementById(`defaultView_${counter}`);
@@ -129,6 +141,8 @@ function cancelPaymentForm(counter) {
   defaultView.style.display = "block";
 }
 
+
+// JavaScript to toggle payment details visibility
 document.addEventListener('DOMContentLoaded', function () {
   // Select all toggle buttons
   const toggleButtons = document.querySelectorAll('.toggle-details');

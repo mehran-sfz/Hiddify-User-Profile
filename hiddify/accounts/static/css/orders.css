@@ -197,7 +197,6 @@ body::before {
     padding: 1rem;
     text-align: center;
     vertical-align: middle;
-    background-color: #fff; /* White background for cells */
     overflow: hidden;
     /* Removed border-radius here */
 }

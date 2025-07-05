@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 
+
 def change_user_password_by_phone(phone_number, new_password):
     """
     this function changes the password of a user identified by their phone number.

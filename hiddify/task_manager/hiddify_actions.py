@@ -1,13 +1,16 @@
-import requests
-from django.conf import settings
-from datetime import date
+import base64
 import logging
+import re
 import urllib.parse
+from datetime import date
+from io import BytesIO
 
 import qrcode
-from io import BytesIO
-import base64
-import re
+import requests
+from django.conf import settings
+from client_actions.models import Config
+from task_manager.models import HiddifyUser
+
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +156,7 @@ def on_off_user(uuid, enable=True,
                 admin_proxy_path=None,
                 panel_admin_domain=None,
                 ):
-
+    
     if not hiddify_api_key or not admin_proxy_path or not panel_admin_domain:
         logger.error("Error disabling user due to missing hiddify arguments")
         return False
@@ -178,8 +181,10 @@ def on_off_user(uuid, enable=True,
         response = requests.patch(url=url, headers=headers, json=data)
 
         if response.ok:
+            
             logger.info(f"User {uuid} disabled successfully.")
             return True
+        
         else:
             logger.error(f"Failed to disable user {uuid}.")
             return False
@@ -211,6 +216,13 @@ def delete_user(uuid,
         response = requests.delete(url=url, headers=headers)
 
         if response.ok:
+            
+            try:
+                hiddify_user = HiddifyUser.objects.get(uuid=uuid)
+                hiddify_user.delete()
+            except HiddifyUser.DoesNotExist:
+                logger.error(f"HiddifyUser with uuid {uuid} does not exist.")
+               
             logger.info(f"User {uuid} deleted successfully.")
             return True
         else:

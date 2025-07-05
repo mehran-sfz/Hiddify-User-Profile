@@ -28,6 +28,44 @@
     <link href="{% static 'css/admin.css' %}" rel="stylesheet" />
   </head>
 
+
+
+
+    <!-- Bootstrap Modal -->
+    <div
+      class="modal fade"
+      id="confirmDeleteModal"
+      tabindex="-1"
+      aria-labelledby="confirmDeleteModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="confirmDeleteModalLabel">تایید حذف</h5>
+          </div>
+          <div class="modal-body" id="modal-body-content">
+            </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              انصراف
+            </button>
+            <form id="deleteForm" method="post" class="m-0">
+              {% csrf_token %}
+              <input type="hidden" name="order_pk" id="orderPkInput" value="" />
+              <button type="submit" class="btn btn-danger">بله، مطمئنم</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
   <body class="p-4" style="overflow-y: auto">
     <!-- Alert Messages -->
     {% include "includes/alert.html" %}
@@ -82,29 +120,34 @@
                       {% endif %}
                     </td>
                     <td>
-                      
-                      {% if order.pending and order.name and not order.order_payment %}
-                      <form
-                        class="d-inline"
-                        action="{% url 'deleteorderadmin' %}"
-                        method="post"
-                      >
-                        {% csrf_token %}
-                        <input
-                          type="hidden"
-                          name="order_pk"
-                          value="{{ order.pk }}"
-                        />
-                        <button type="submit" class="btn btn-outline-danger btn-click">
-                          لغو
-                        </button>
-                      <div class="p-2 g-col-6">
-                      </form>
-                      {% endif %}
-                      <a class="btn btn-outline-primary btn-click toggle-details"
-                      data-target="#paymentDetails{{ order.pk }}">جزئیات</a>
+                      <div class="d-flex gap-2 align-items-center">
+
+                        {% if order.name and not order.order_payment %}
+                          <button
+                            type="button"
+                            class="btn btn-outline-danger btn-click"
+                            data-bs-toggle="modal"
+                            data-bs-target="#confirmDeleteModal"
+                            data-form-action="{% url 'deleteorderadmin' %}"
+                            data-order-pk="{{ order.pk }}"
+                            data-order-name="{{ order.name }}"
+                            data-order-user-fullname="{{ order.user.first_name }} {{ order.user.last_name }}"
+                            data-order-user-username="{{ order.user }}"
+                          >
+                            لغو
+                          </button>
+                        {% endif %}
+
+                        <a
+                          class="btn btn-outline-primary btn-click toggle-details"
+                          data-target="#paymentDetails{{ order.pk }}"
+                        >
+                          جزئیات
+                        </a>
+
                       </div>
                     </td>
+
                   </tr>
 
                   <!-- Hidden Payment Details Row -->
@@ -120,7 +163,7 @@
                         <p>
                           <strong>لینک تصویر رسید:</strong>
                           <a
-                            href="{{ order.order_payment.screenshot.url }}"
+                            href="{% url 'serve_payment_screenshot' payment_id=order.order_payment.pk %}"
                             target="_blank"
                             >مشاهده رسید</a
                           >
@@ -236,3 +279,44 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{% static 'js/script.js' %}"></script>
 
+
+<script>
+  // منتظر می‌مانیم تا کل صفحه بارگذاری شود
+  document.addEventListener('DOMContentLoaded', function () {
+    // مودال را با استفاده از ID آن پیدا می‌کنیم
+    var confirmDeleteModal = document.getElementById('confirmDeleteModal');
+
+    // به رویداد 'show.bs.modal' گوش می‌دهیم. این رویداد قبل از نمایش مودال فعال می‌شود
+    confirmDeleteModal.addEventListener('show.bs.modal', function (event) {
+      // دکمه‌ای که مودال را باز کرده است، پیدا می‌کنیم
+      var button = event.relatedTarget;
+
+      // اطلاعات را از data attributes دکمه می‌خوانیم
+      var formAction = button.getAttribute('data-form-action');
+      var orderPk = button.getAttribute('data-order-pk');
+      var orderName = button.getAttribute('data-order-name');
+      var userFullname = button.getAttribute('data-order-user-fullname');
+      var userUsername = button.getAttribute('data-order-user-username');
+
+      // متن بدنه مودال را با اطلاعات جدید به‌روزرسانی می‌کنیم
+      var modalBody = confirmDeleteModal.querySelector('#modal-body-content');
+      modalBody.innerHTML = `
+        <p>آیا از حذف سفارش زیر اطمینان دارید؟</p>
+        <ul>
+          <li><strong>نام پلن:</strong> ${orderName}</li>
+          <li><strong>کاربر:</strong> ${userFullname}</li>
+          <li><strong>شماره:</strong>${userUsername}</li>
+        </ul>
+      `;
+
+      // فرم داخل مودال را پیدا می‌کنیم
+      var deleteForm = confirmDeleteModal.querySelector('#deleteForm');
+      // آدرس action فرم را تنظیم می‌کنیم
+      deleteForm.setAttribute('action', formAction);
+
+      // مقدار input مخفی را با pk سفارش پر می‌کنیم
+      var orderPkInput = confirmDeleteModal.querySelector('#orderPkInput');
+      orderPkInput.value = orderPk;
+    });
+  });
+</script>

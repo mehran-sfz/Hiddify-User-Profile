@@ -1,9 +1,9 @@
-from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.db import models
 
-from task_manager.models import HiddifyUser
 from plans.models import Plan
+from task_manager.models import HiddifyUser
 
 
 class Config(models.Model):

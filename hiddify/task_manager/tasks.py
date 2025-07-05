@@ -1,24 +1,19 @@
+import logging
+from datetime import date, datetime, timedelta
+
 import requests
-
 from celery import shared_task
-
-from django.utils import timezone
-from django.db import transaction
-from django.db.models import Q, F
-
 from django.conf import settings
-
-from client_actions.models import Config, Order
-
-from telegram_bot.models import Telegram_Bot_Info, Telegram_account
-from task_manager.models import HiddifyUser, HiddifyAccessInfo
-from task_manager.hiddify_actions import update_user, get_users, on_off_user, send_telegram_message
+from django.db import transaction
+from django.db.models import F, Q
+from django.utils import timezone
 
 from adminlogs.action import add_admin_log
-
-from datetime import datetime, timedelta, date
-import logging
-
+from client_actions.models import Config, Order
+from task_manager.hiddify_actions import (get_users, on_off_user,
+                                          send_telegram_message, update_user)
+from task_manager.models import HiddifyAccessInfo, HiddifyUser
+from telegram_bot.models import Telegram_account, Telegram_Bot_Info
 
 logger = logging.getLogger(__name__)
 
@@ -165,12 +160,13 @@ def check_subscription_expiry():
                 # Update the order status
                 order.pending = False
                 order.save()
+                
+                
                 logger.info(
                     f'User subscription updated: {expired_user.uuid} name: {expired_user.name}')
                 continue
 
         else:
-            # Disable the user account
             logger.info(
                 f'User do not have a pending order: {expired_user.uuid} name: {expired_user.name}')
             continue
@@ -220,14 +216,14 @@ def disable_not_paid_users(self):
                         )
             logger.info(f'User disabled: {order.config.uuid}')
             
-            config = HiddifyUser.objects.get(uuid=order.config.uuid)
-            
+            hiddify_config = HiddifyUser.objects.get(uuid=order.config.uuid)
+                        
             if telegram_info:
                 
                 # Send a message to the user about disabling their account
                 try:
                     telegram_account = Telegram_account.objects.get(user=order.user)
-                    message = f'⚠️ <b>اطلاع رسانی</b> ⚠️\n\n🔴 اشتراک "{config.name}" شما به دلیل عدم پرداخت هزینه، قطع شده است.\n\nبرای فعال‌سازی مجدد، لطفاً از طریق <a href="{settings.DOMAIN_NAME}">لینک پرداخت</a> اقدام فرمایید. 🙏'
+                    message = f'⚠️ <b>اطلاع رسانی</b> ⚠️\n\n🔴 اشتراک "{hiddify_config.name}" شما به دلیل عدم پرداخت هزینه، قطع شده است.\n\nبرای فعال‌سازی مجدد، لطفاً از طریق <a href="{settings.DOMAIN_NAME}">لینک پرداخت</a> اقدام فرمایید. 🙏'
                     send_telegram_message(token=telegram_info.token, chat_id=telegram_account.telegram_user_id, message=message)
                     logger.info(f'Message sent to {order.user} about disabling user: {order.config.uuid}')
                 
@@ -236,7 +232,7 @@ def disable_not_paid_users(self):
                     continue
                 
                 # send admin log to telegram
-                message = f'کاربری با uuid: {order.config.uuid} و نام: {config.name} به دلیل عدم پرداخت هزینه، غیرفعال شد.'
+                message = f'کاربری با uuid: {order.config.uuid} و نام: {hiddify_config.name} به دلیل عدم پرداخت هزینه، غیرفعال شد.'
                 send_telegram_message(token=telegram_info.token, chat_id=telegram_info.admin_user_id, message=message,)
             
             

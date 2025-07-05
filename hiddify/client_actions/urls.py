@@ -1,4 +1,5 @@
 from django.urls import path
+
 from . import views
 
 urlpatterns = [
@@ -11,5 +12,8 @@ urlpatterns = [
     
     path('admin-panel/deleteorder/', views.DeleteOrderAdminView, name='deleteorderadmin'),
     path('admin-panel/confirmorder/', views.ConfirmOrderAdminView, name='confirmorderadmin'),
+    
+    path('payment-screenshot/<int:payment_id>/', views.serve_payment_screenshot, name='serve_payment_screenshot'),
+
     
 ]

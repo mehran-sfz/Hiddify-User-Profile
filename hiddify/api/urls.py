@@ -1,8 +1,11 @@
 
 from django.urls import path
+from rest_framework_simplejwt.views import (TokenObtainPairView,
+                                            TokenRefreshView)
 
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .views import ProfileView, RegisterView, ConfigListView, ConfigView, OrderListView, OrderView, PaymentListView, PaymentView, PlanlisrView
+from .views import (ConfigListView, ConfigView, OrderListView, OrderView,
+                    PaymentListView, PaymentView, PlanlisrView, ProfileView,
+                    RegisterView)
 
 urlpatterns = [
     

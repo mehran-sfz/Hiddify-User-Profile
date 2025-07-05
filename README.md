@@ -202,7 +202,7 @@ nano nginx/nginx.conf
 
   
 
-فایل تنظیمات اصلی پروژه را باز کنید:
+فایل های .env پروژه با باز و طبق نیاز خود تغییر دهید.
 
   
 
@@ -211,6 +211,7 @@ nano nginx/nginx.conf
 ```bash
 
 nano hiddify/.env
+nano telegram_bot/.env
 
 ```
 
@@ -221,74 +222,45 @@ nano hiddify/.env
 ## App variables
 
 DEBUG=False # برای فعال سازی دولوپر مود
-
 IS_DEVELOPMENT=False # برای فعال سازی دولوپر مود
+ALLOWED_HOSTS=YOUR_DOMAIN_NAME # آدرس دامنه ی متصل به آیپی سرور EXAMPLE: example.com
 
-ALLOWED_HOSTS=YOUR_DOMAIN_NAME # آدرس دامنه ی متصل به آیپی سرور
 
+# database
 DATABASE_NAME=postgres
-
 DATABASE_USER=postgres
-
 DATABASE_PASSWORD=postgres
-
 DATABASE_HOST=database
-
 DATABASE_PORT=5432
 
-  
 
 # redis
+REDIS_PASSWORD=REDIS_PASSWORD_HERE # EXAMPLE: "my_redis_password"
+CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/0 
+CELERY_RESULT_BACKEND=${CELERY_BROKER_URL}
 
-REDIS_PASSWORD=REDIS_PASSWORD_HERE # پسوورد ردیس
-
-CELERY_BROKER_URL=redis://:REDIS_PASSWORD_HERE@redis:6379/0 # پسوورد ردیس اضافه شود
-
-CELERY_RESULT_BACKEND=redis://:REDIS_PASSWORD_HERE@redis:6379/0 # پسوورد ردیس اضافه شود
-
-  
-
-# celery
-
+# security
 IS_HTTPS_USED=True
-
 CSRF_COOKIE_SECURE=True # برای امنیت post requests ها
-
 SESSION_COOKIE_SECURE=True
 
-CSRF_TRUSTED_ORIGINS=YOUR_DOMAIN_NAME # EXAMPLE: https://example.com با دامنه ی خود را وارد کنید
-
-  
 
 # configs
-
 WAITING_FOR_PAYMENT_TIMEOUT_DAYS = 5 # مدت زمان انتظار بعد از سفارش هر اشتراک قبل از قطع شدن در صورت پرداخت نشدن صورت حساب
-
 WARNING_FOR_PAYMENT_TIMEOUT_DAYS = 3 # پیام به ربات بعد از سه روز انتظار در صورت پرداخت نشدن اشتراک
-
 WARNING_FOR_CONFIG_TIMEOUT_DAYS = 5 # 5 روز قبل از تموم شدن اشتراک یادآوری شود به کاربر
-
 WARNING_FOR_USAGE_GB = 5 # کمتر از 5 گیگ اعتبار به کاربر اطلاع داده شود
-
 FETCH_USERS_DURATION_SECONDS = 60 # گرفتن اطلاعات کاربر از هیدیفای پس هر 60 ثانیه
-
 TELEGRAM_NOTIFICATION_INTERVAL_HOURS = 12 # نوتیفیکیشن های تلگرام هر 12 ساعت ارسال شود
 
-DOMAIN_NAME=YOUR_DOMAIN_NAME # EXAMPLE: https://example.com جایگذاری دامنه
-
   
-
 # information
 
-CHANNEL_NAME="YOUR CHANNEL_NAME_HERE" # EXAMPLE: "MAN BATMANAM" اسم چنل تلگرامی خود
-
 CHANNEL_LINK="https://t.me/YOUR_CHANNEL_ID_HERE" # EXAMPLE: "https://t.me/batmanam2" لینک چنل خود
-
 SUPPORT_TELEGRAM_LINK="https://t.me/YOUR_SUPPORT_TELEGRAM_ID_HERE" # EXAMPLE: "https://t.me/batmanam2" لینک دامنه ی پشتیبانی خود
 
 ```
 
-  
   
 
 - فایل را متناسب با نیاز خود تغییر دهید و ذخیره کنید.

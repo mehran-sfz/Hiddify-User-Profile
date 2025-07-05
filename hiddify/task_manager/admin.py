@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import HiddifyUser, HiddifyAccessInfo
+
+from .models import HiddifyAccessInfo, HiddifyUser
 
 
 @admin.register(HiddifyUser)

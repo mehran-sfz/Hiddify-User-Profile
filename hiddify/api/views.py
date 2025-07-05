@@ -1,17 +1,16 @@
 from django.contrib.auth import get_user_model
-from rest_framework import generics
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
-
-from .serializers import (RegisterSerializer, ProfileSerializer, ConfigSerializer, OrderSerializer, PaymentSerializer, PlanSerializer)
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from accounts.models import Profile
 from client_actions.models import Config, Order, Payment
 from plans.models import Plan
 
+from .serializers import (ConfigSerializer, OrderSerializer, PaymentSerializer,
+                          PlanSerializer, ProfileSerializer,
+                          RegisterSerializer)
 
 User = get_user_model()
 

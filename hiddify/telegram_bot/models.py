@@ -1,6 +1,7 @@
-from django.db import models
-from accounts.models import Profile
 from django.conf import settings
+from django.db import models
+
+from accounts.models import Profile
 
 
 class Telegram_Bot_Info(models.Model):

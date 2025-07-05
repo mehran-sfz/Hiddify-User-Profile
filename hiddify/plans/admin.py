@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Plan, Bank_Information
+
+from .models import Bank_Information, Plan
+
 
 @admin.register(Plan)
 class UserAdmin(admin.ModelAdmin):

@@ -1,17 +1,24 @@
-from django.shortcuts import redirect
-from django.contrib import messages
+import mimetypes
+from datetime import timedelta
+from django.utils import timezone
 
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-
-from client_actions.models import Config, Order, Payment
-from task_manager.models import HiddifyUser, HiddifyAccessInfo
-from plans.models import Plan
-from telegram_bot.models import Telegram_Bot_Info
+from django.http import Http404, HttpResponse, HttpResponseForbidden
+from django.shortcuts import get_object_or_404, redirect
 
 from adminlogs.action import add_admin_log
-from task_manager.hiddify_actions import add_new_user, extract_uuid_from_url, delete_user, send_telegram_message
+from client_actions.models import Config, Order, Payment
+from plans.models import Plan
+from task_manager.hiddify_actions import (add_new_user, delete_user,
+                                          extract_uuid_from_url,
+                                          send_telegram_message)
+from task_manager.models import HiddifyAccessInfo, HiddifyUser
+from telegram_bot.models import Telegram_Bot_Info
 
+import task_manager.hiddify_actions as hiddify_actions
 
 def AddConfigView(request):
     # Redirect if the user is not authenticated
@@ -90,7 +97,6 @@ def BuyNewConfigView(request):
             return redirect('/buyconfig/')
 
         # Call external function to add the new user and receive the UUID
-
         try:
             hiddify_access_info = HiddifyAccessInfo.objects.latest('created_date')
         except HiddifyAccessInfo.DoesNotExist:
@@ -101,6 +107,25 @@ def BuyNewConfigView(request):
             add_admin_log(
                             f'Error in add hiddify user in client acction view - {e}', 'user', request.user)
             return redirect('/buyconfig/')
+        
+        
+        # check the maximum number of configs for the user
+        if request.user.profile.config_limitation <= Config.objects.filter(user=request.user).count():
+            messages.error(
+                request, 'شما به حداکثر تعداد کانفیگ مجاز رسیده‌اید، برای خرید کانفیگ جدید، لطفا با ادمین تماس بگیرید.')
+            return redirect('/buyconfig/')
+        
+        
+        # check that passed 5 minutes from last config creation to create a new config
+        last_config = Config.objects.filter(user=request.user).last()
+        if last_config:
+            time_difference = timezone.now() - last_config.updated_date
+            if time_difference < timedelta(minutes=5):
+                messages.error(
+                    request, 'شما باید حداقل 5 دقیقه بین ایجاد کانفیگ‌ها فاصله بگذارید.')
+                return redirect('/buyconfig/')
+    
+        
 
         hiddify_api_key = hiddify_access_info.hiddify_api_key
         panel_admin_domain = hiddify_access_info.panel_admin_domain
@@ -149,7 +174,7 @@ def BuyNewConfigView(request):
             order = Order.objects.create(
                 user=request.user, config=Config.objects.get(user=request.user, uuid=add_new_user_status['uuid']), plan=plan)
             order.save()
-            messages.success(request, 'سفارش با موفقیت ثبت شد')
+            messages.success(request, 'سفارش با موفقیت ثبت شد. برای فعال شدن کانفیگ یک دقیقه صبر کنید.')
             
             # send telegram message to admin trough html message template
             telegram_bot_info = Telegram_Bot_Info.objects.first()
@@ -175,14 +200,14 @@ def BuyNewConfigView(request):
             
         except Exception as e:
 
-            config.delete()
-            hiddifyuser.delete()
 
             delete_user(uuid=add_new_user_status['uuid'],
                         hiddify_api_key=hiddify_api_key,
                         admin_proxy_path=admin_proxy_path,
                         panel_admin_domain=panel_admin_domain
                         )
+            
+            config.delete()
 
             add_admin_log(f'Error in add order {e}', 'user', request.user)
             messages.error(
@@ -354,7 +379,7 @@ def DeleteOrderView(request):
                     request, 'سفارش پرداخت شده است و نمی‌تواند حذف شود')
             elif not order.pending:
                 messages.error(
-                    request, 'سفارش در حال انجام است و نمی‌تواند حذف شود')
+                    request, 'سفارش اعمال شده است و نمی‌تواند حذف شود')
             else:
                 # Delete the order
                 order.delete()
@@ -384,10 +409,6 @@ def DeleteOrderView(request):
                 except Exception as e:
                     add_admin_log(f'Error in delete hiddify user {e}', 'user', request.user)
                     messages.error(request, f'خطا در حذف کاربر: {str(e)}')
-                
-                # delete hiddify user from database
-                hiddify_user = HiddifyUser.objects.get(uuid=order.config.uuid)
-                hiddify_user.delete()
                 
                 
                 messages.success(request, 'سفارش با موفقیت حذف شد')
@@ -479,21 +500,67 @@ def DeleteOrderAdminView(request):
 
         if not order_pk:
             messages.error(request, 'سفارش پیدا نشد')
-            return redirect('/admin-panel/order')
-
+            return redirect('/admin-panel/orders/')
+                    
         try:
             order = Order.objects.get(pk=order_pk)
-            order.delete()
-            messages.warning(request, 'سفارش با موفقیت حذف شد')
+            config = Config.objects.get(user=order.user, uuid=order.config.uuid)
+            hiddify_access_info = HiddifyAccessInfo.objects.latest('created_date')
+                        
+            # if the config of that order created before 60 minutes, delete that config and hiddify user
+            if (config.updated_date > timezone.now() - timedelta(minutes=60)) and not order.status:
+                
+                status = hiddify_actions.delete_user(
+                    uuid=order.config.uuid,
+                    hiddify_api_key=hiddify_access_info.hiddify_api_key,
+                    admin_proxy_path=hiddify_access_info.admin_proxy_path,
+                    panel_admin_domain=hiddify_access_info.panel_admin_domain,
+                )
+                if status:
+                    order.delete()
+                    config.delete()
+                    messages.success(request, 'سفارش و کانفیگ با موفقیت حذف شد')
+                else:
+                    messages.error(request, 'خطا در حذف کاربر در هیدیفای')
+            
+            elif not order.pending:
+                
+                status = hiddify_actions.on_off_user(
+                    uuid=order.config.uuid,
+                    hiddify_api_key=hiddify_access_info.hiddify_api_key,
+                    admin_proxy_path=hiddify_access_info.admin_proxy_path,
+                    panel_admin_domain=hiddify_access_info.panel_admin_domain,
+                    enable = False
+                )
+            
+                if not status:
+                    messages.error(request, 'خطا در غیرفعال کردن کاربر در هیدیفای')
+                    return redirect('/admin-panel/orders/')
+                else:
+                    messages.success(request, 'کاربر در هیدیفای غیرفعال شد')            
+            
+                order.delete()
+                messages.warning(request, 'سفارش با موفقیت حذف شد')
+            
+            else:
+                messages.error(request, 'این سفارش را در حال حاضر نمیتوان حذف کرد')
+            
+        except Config.DoesNotExist:
+            messages.error(request, 'کانفیگ پیدا نشد')
+            return redirect('/admin-panel/orders/')
 
         except Order.DoesNotExist:
             messages.error(request, 'سفارش پیدا نشد')
+            
+        except HiddifyAccessInfo.DoesNotExist:
+            messages.error(request, 'کانفیگ در هیدیفای پیدا نشد')
+            return redirect('/admin-panel/orders/')
 
         except Exception as e:
             add_admin_log(f'Error in delete order {e}', 'admin', request.user)
             messages.error(request, f'خطا در حذف سفارش: {str(e)}')
 
-    return redirect('/admin-panel/order')
+    return redirect('/admin-panel/orders/')
 
 
 def ConfirmOrderAdminView(request):
@@ -518,6 +585,25 @@ def ConfirmOrderAdminView(request):
                 messages.success(request, 'سفارش تایید شد')
 
             elif confirm_payment == 'false':
+                
+                
+                # disable the user in hiddify using tools.on_off_user
+                hiddify_access_info = HiddifyAccessInfo.objects.latest('created_date')
+                hiddify_api_key = hiddify_access_info.hiddify_api_key
+                panel_admin_domain = hiddify_access_info.panel_admin_domain
+                admin_proxy_path = hiddify_access_info.admin_proxy_path
+                status = hiddify_actions.on_off_user(
+                    uuid=payment.config.uuid,
+                    hiddify_api_key=hiddify_api_key,
+                    admin_proxy_path=admin_proxy_path,
+                    panel_admin_domain=panel_admin_domain,
+                    enable = False
+                )
+                if not status:
+                    messages.error(request, 'خطا در غیرفعال کردن کاربر در هیدیفای')
+                    return redirect('/admin-panel/orders/')
+                
+                
                 payment.delete()
                 messages.warning(request, 'پرداخت حذف شد')
 
@@ -529,3 +615,44 @@ def ConfirmOrderAdminView(request):
             messages.error(request, f'خطا در تایید سفارش: {str(e)}')
 
     return redirect('/admin-panel/orders/')
+
+
+@login_required
+def serve_payment_screenshot(request, payment_id):
+    """
+    this view serves the payment screenshot file securely
+    using Nginx's internal redirect feature.
+    It ensures that only the user who made the payment or an admin can access the file.
+    """
+    # 1. find the payment object by ID
+    payment = get_object_or_404(Payment, pk=payment_id)
+
+    # 2. ensure that the payment has a screenshot
+    if not payment.screenshot:
+        raise Http404("اسکرین‌شاتی برای این پرداخت ثبت نشده است.")
+
+    # 3. check if the user has permission to access the screenshot
+    # current user must be the one who made the payment or an admin
+    user = request.user
+    if user == payment.user or user.is_staff:
+        # 4. nginx will serve the file from the media directory
+        # the file_path is the relative path to the media directory
+        # for example: 'screenshots/2024/07/05/img.png'
+        
+        file_path = payment.screenshot.name
+        
+        # generate the HttpResponse with the appropriate headers
+        response = HttpResponse()
+        
+        # set the content type based on the file extension
+        content_type, _ = mimetypes.guess_type(file_path)
+        response['Content-Type'] = content_type or 'application/octet-stream'
+
+        # set the content disposition to attachment to prompt download
+        # response['Content-Disposition'] = f'attachment; filename="{file_path.split("/")[-1]}"'
+        response['X-Accel-Redirect'] = f'/protected_media/{file_path}'
+
+        return response
+    else:
+        # 5. if the user does not have permission, return a forbidden response
+        return HttpResponseForbidden("شما اجازه دسترسی به این فایل را ندارید.")

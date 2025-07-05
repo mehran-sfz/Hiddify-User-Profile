@@ -1,16 +1,15 @@
-from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError as DjangoValidationError
-from django.contrib.auth.password_validation import validate_password
+import re
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
 from accounts.models import Profile
-from plans.models import Plan
 from client_actions.models import Config, Order, Payment
+from plans.models import Plan
 from task_manager.models import HiddifyUser
-
-import re
 
 User = get_user_model()
 

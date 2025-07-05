@@ -1,8 +1,8 @@
-from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
-from plans.models import Plan
-from adminlogs.action import add_admin_log
+from django.shortcuts import get_object_or_404, redirect
 
+from adminlogs.action import add_admin_log
+from plans.models import Plan
 
 
 def Add_Edit_PlanView(request):

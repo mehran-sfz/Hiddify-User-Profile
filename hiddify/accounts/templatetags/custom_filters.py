@@ -1,10 +1,10 @@
-from django import template
-import jdatetime
-from django.utils import timezone
-from datetime import date
-import pytz
 import logging
+from datetime import date
 
+import jdatetime
+import pytz
+from django import template
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 

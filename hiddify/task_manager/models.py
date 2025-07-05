@@ -1,5 +1,7 @@
-from django.db import models
 from datetime import timedelta
+
+from django.db import models
+
 
 class HiddifyUser(models.Model):
     

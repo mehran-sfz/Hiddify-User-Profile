@@ -1,25 +1,25 @@
-from pathlib import Path
 import os
 from datetime import timedelta
-from celery.schedules import timedelta
+from pathlib import Path
 
+from celery.schedules import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ----------------- Local settings -----------------
+# ---------------------- environment variables ----------------------
+
+# Load environment variables from .env file
 DEBUG = True if os.environ.get('DEBUG') == 'True' else False
 IS_DEVELOPMENT = True if os.environ.get('IS_DEVELOPMENT') == 'True' else False
 SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-secret-key').strip()
 ALLOWED_HOSTS = [os.environ.get('ALLOWED_HOSTS', '*').strip()]
 
 IS_HTTPS_USED = True if os.environ.get('IS_HTTPS_USED') == 'True' else False
-if IS_HTTPS_USED:
+if IS_HTTPS_USED and ALLOWED_HOSTS != ['*']:
     CSRF_COOKIE_SECURE = True if os.environ.get('CSRF_COOKIE_SECURE') == 'True' else False
     SESSION_COOKIE_SECURE = True if os.environ.get('SESSION_COOKIE_SECURE') == 'True' else False
-    CSRF_TRUSTED_ORIGINS = [
-        os.environ.get('CSRF_TRUSTED_ORIGINS'),
-        ]
+    CSRF_TRUSTED_ORIGINS = ['https://'+ host.strip() for host in ALLOWED_HOSTS if host.strip() != '*']
     
 
 # duration for different tasks
@@ -30,11 +30,18 @@ WARNING_FOR_USAGE_GB = int(os.environ.get('WARNING_FOR_USAGE_GB', 5))
 FETCH_USERS_DURATION_SECONDS = int(os.environ.get('FETCH_USERS_DURATION_SECONDS', 120))
 TELEGRAM_NOTIFICATION_INTERVAL_HOURS = int(os.environ.get('TELEGRAM_NOTIFICATION_INTERVAL_HOURS', 12))
 
-# information
-DOMAIN_NAME = os.environ.get('DOMAIN_NAME', 'https://t.me/batmanam2').strip()
+# information of your telegram channel
+if ALLOWED_HOSTS != ['*']:
+    DOMAIN_NAME = f'https://{ALLOWED_HOSTS[0]}'
+else:
+    DOMAIN_NAME = 'https://t.me/batmanam2'
+    
 CHANNEL_NAME= os.environ.get('CHANNEL_NAME', 'Batmanam')
 CHANNEL_LINK= os.environ.get('CHANNEL_LINK', 'https://t.me/batmanam_v')  
 SUPPORT_TELEGRAM_LINK= os.environ.get('SUPPORT_TELEGRAM_LINK', 'https://t.me/batmanam2')
+
+
+# ---------------------- end of environment variables ----------------------
 
 
 # CSRF life time

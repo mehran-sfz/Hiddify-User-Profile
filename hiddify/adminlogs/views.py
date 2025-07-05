@@ -1,8 +1,8 @@
-from django.shortcuts import redirect
 from django.contrib import messages
-from adminlogs.models import Message
+from django.shortcuts import get_object_or_404, redirect
+
 from adminlogs.action import add_admin_log
-from django.shortcuts import get_object_or_404
+from adminlogs.models import Message
 
 
 def SendMessageToAll(request):

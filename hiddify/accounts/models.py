@@ -1,14 +1,12 @@
-from django.db import models
-from django.conf import settings
-
-from django.contrib.auth.models import BaseUserManager
-
-from django.core.validators import RegexValidator  # Import for validating phone numbers
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin  # Base user classes
-from django.db import models  # Django's ORM for defining model fields
-
 import random
 import uuid
+
+from django.conf import settings
+from django.contrib.auth.models import (AbstractBaseUser,  # Base user classes
+                                        BaseUserManager, PermissionsMixin)
+from django.core.validators import \
+    RegexValidator  # Import for validating phone numbers
+from django.db import models  # Django's ORM for defining model fields
 
 #------------------------------------ Custom User Model ------------------------------------#
 
@@ -91,21 +89,14 @@ class Profile(models.Model):
     avatar = models.ImageField(blank=True, upload_to='profile_avatars/')
         
     wallet = models.PositiveIntegerField(default=0)
+    
+    config_limitation = models.PositiveBigIntegerField(default=3, help_text='The maximum number of configurations a user can create or have at a time.')
 
     def __str__(self):
         return f'{self.user} - {self.user.phone_number}'
     
     def save(self, *args, **kwargs):
         
-        # # Check if the user was invited by someone
-        # if self.invited_by:
-        #     try:
-        #         inviter_profile = Profile.objects.get(invite_code=self.invited_by) # Get the inviter's profile
-        #     except Profile.DoesNotExist:
-        #         raise ValueError('There is no user by this invite code')
-            
-        #     # Set the invited_by field to the inviter's user
-        #     self.invited_by = inviter_profile.user
         
         if self.invited_by:
             if self.invited_by.is_active: # Check if the inviter's profile is active
