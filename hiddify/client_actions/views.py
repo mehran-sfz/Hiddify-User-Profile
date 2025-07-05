@@ -523,7 +523,7 @@ def DeleteOrderAdminView(request):
                 else:
                     messages.error(request, 'خطا در حذف کاربر در هیدیفای')
             
-            elif not order.pending:
+            elif not order.pending and not order.status:
                 
                 status = hiddify_actions.on_off_user(
                     uuid=order.config.uuid,
