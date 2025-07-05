@@ -191,9 +191,7 @@ nano nginx/nginx.conf
   
 
 - **Ctrl + O** برای ذخیره فایل
-
 - **Enter** برای تأیید
-
 - **Ctrl + X** برای خروج
 
   
@@ -303,13 +301,9 @@ nano docker-compose.yml
 ```bash
 
   - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-
   - ./certbot/conf:/etc/letsencrypt
-
   - ./certbot/www:/var/www/certbot
-
   - static:/var/www/static
-
   - media:/var/www/media
 
 ```
@@ -323,9 +317,7 @@ nano docker-compose.yml
 ```bash
 
   - ./nginx/nginx-temp.conf:/etc/nginx/nginx.conf:ro
-
   - ./certbot/conf:/etc/letsencrypt
-
   - ./certbot/www:/var/www/certbot
 
 ```
@@ -339,7 +331,6 @@ nano docker-compose.yml
 ```bash
 
   - YOUREMAIL@EMAIL.COM: ایمیل خود
-
   - YOUTDOMAIN.COM: دامنه خود
 
 ```
@@ -364,8 +355,6 @@ nano docker-compose.yml
 
 
 chmod +x ./hiddify/entrypoint.sh
-
-
 docker-compose up -d --build
 
 
@@ -391,7 +380,6 @@ nano docker-compose.yml
 ```bash
 
 docker-compose down
-
 docker-compose up -d --build
 
 ```
@@ -535,7 +523,7 @@ docker exec -it hiddify-app python manage.py createsuperuser
 ![برگه خانه کاربر](https://github.com/mehran-sfz/Hiddify-User-Profile/blob/main/screenshots/user_home.png?raw=true)
 
 برگه اضافه یا خرید کاربر:
-![برگه اضافه یا خرید کاربر](https://github.com/mehran-sfz/Hiddify-User-Profile/blob/main/screenshots/user_buy_ and_add.png?raw=true)
+![برگه اضافه یا خرید کاربر](https://github.com/mehran-sfz/Hiddify-User-Profile/blob/main/screenshots/user_buy_and_add.png?raw=true)
 
 
 برگه خانه ادمین:
