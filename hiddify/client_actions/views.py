@@ -95,6 +95,31 @@ def BuyNewConfigView(request):
         except Exception as e:
             messages.error(request, 'خطا در بازیابی پلن انتخابی')
             return redirect('/buyconfig/')
+        
+        # check the maximum number of configs for the user
+        if request.user.profile.config_limitation <= Config.objects.filter(user=request.user).count():
+            messages.error(
+                request, 'شما به حداکثر تعداد کانفیگ مجاز رسیده‌اید، برای خرید کانفیگ جدید، لطفا با ادمین تماس بگیرید.')
+            return redirect('/buyconfig/')
+        
+        # check that passed 5 minutes from last config creation to create a new config
+        last_config = Config.objects.filter(user=request.user).last()
+        if last_config:
+            time_difference = timezone.now() - last_config.updated_date
+            if time_difference < timedelta(minutes=5):
+                messages.error(
+                    request, 'شما باید حداقل 5 دقیقه بین ایجاد کانفیگ‌ها فاصله بگذارید.')
+                return redirect('/buyconfig/')
+    
+        # get the orders for the user and this config if exist to check if the user has a pending order
+        unpaid_orders = Order.objects.filter(
+            user=request.user, status=False).order_by('-created_date')
+
+        if unpaid_orders.exists():
+            messages.error(
+                request, 'شما یک سفارش پرداخت نشده دارید، لطفا آن را پرداخت کنید یا حذف کنید.')
+            return redirect('/buyconfig/')
+    
 
         # Call external function to add the new user and receive the UUID
         try:
@@ -108,30 +133,12 @@ def BuyNewConfigView(request):
                             f'Error in add hiddify user in client acction view - {e}', 'user', request.user)
             return redirect('/buyconfig/')
         
-        
-        # check the maximum number of configs for the user
-        if request.user.profile.config_limitation <= Config.objects.filter(user=request.user).count():
-            messages.error(
-                request, 'شما به حداکثر تعداد کانفیگ مجاز رسیده‌اید، برای خرید کانفیگ جدید، لطفا با ادمین تماس بگیرید.')
-            return redirect('/buyconfig/')
-        
-        
-        # check that passed 5 minutes from last config creation to create a new config
-        last_config = Config.objects.filter(user=request.user).last()
-        if last_config:
-            time_difference = timezone.now() - last_config.updated_date
-            if time_difference < timedelta(minutes=5):
-                messages.error(
-                    request, 'شما باید حداقل 5 دقیقه بین ایجاد کانفیگ‌ها فاصله بگذارید.')
-                return redirect('/buyconfig/')
-    
-        
-
+        # Extract necessary information from HiddifyAccessInfo
         hiddify_api_key = hiddify_access_info.hiddify_api_key
         panel_admin_domain = hiddify_access_info.panel_admin_domain
         admin_proxy_path = hiddify_access_info.admin_proxy_path
 
-
+        # Call the function to add a new user
         add_new_user_status = add_new_user(
             name=name,
             duration=plan.duration,
