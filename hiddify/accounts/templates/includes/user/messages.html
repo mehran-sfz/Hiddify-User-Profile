@@ -6,54 +6,69 @@
   aria-hidden="true"
 >
   <div class="modal-dialog modal-dialog-scrollable">
-
-    {% if not telegram_id and telegram_bot_info %}
     <div class="modal-content">
+      {% if not telegram_id and telegram_bot_info %}
       <div class="modal-header">
-        <h5 class="modal-title w-100 text-center" id="adminMessageModalLabel">اتصال به ربات تلگرام</h5>
+        <h5 class="modal-title w-100 text-center" id="adminMessageModalLabel">
+          اتصال به ربات تلگرام
+        </h5>
       </div>
       <div class="modal-body">
         <p class="fs-6">
-          برای اطلاع‌رسانی‌ها، دریافت اطلاعیه‌های آنی و همچنین در جریان قرار گرفتن اطلاعات اشتراک خود، اکانت خود را به تلگرام متصل کنید.
-          <br><br>
-          <strong>نکته مهم:</strong> در صورت فراموشی رمز، ربات تلگرام تنها راه برای بازیابی اکانت شماست.
+          برای اطلاع‌رسانی‌ها، دریافت اطلاعیه‌های آنی و همچنین در جریان قرار گرفتن
+          اطلاعات اشتراک خود، اکانت خود را به تلگرام متصل کنید. <br /><br />
+          <strong>نکته مهم:</strong> در صورت فراموشی رمز، ربات تلگرام تنها راه
+          برای بازیابی اکانت شماست.
         </p>
         <div class="text-center my-3">
-            <a class="btn btn-dark btn-contact px-4 py-2" href="https://t.me/{{telegram_bot_info}}?start=uuid={{ user_uuid }}" target="_blank">شروع اتصال به تلگرام</a>
+          <a
+            class="btn btn-dark btn-contact px-4 py-2"
+            href="https://t.me/{{telegram_bot_info}}?start=uuid={{ user_uuid }}"
+            target="_blank"
+            >شروع اتصال به تلگرام</a
+          >
         </div>
+
+        {% if message_to_users %}
+        <hr class="my-4" />
+        <h5 class="modal-title w-100 text-center mb-3">پیام‌های مدیریت</h5>
+        {% for message_user in message_to_users %}
+        <h2 class="fs-5">{{ message_user.title }}</h2>
+        <p class="fs-6">{{ message_user.content }}</p>
+        {% if not forloop.last %}<hr />{% endif %} {% endfor %} {% endif %}
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary btn-click" data-bs-dismiss="modal">
+        <button
+          type="button"
+          class="btn btn-secondary btn-click"
+          data-bs-dismiss="modal"
+        >
           بعداً
         </button>
       </div>
-    </div>
 
-    {% else %}
-    <div class="modal-content">
+      {% elif message_to_users %}
       <div class="modal-header">
-        <h5 class="modal-title w-100 text-center" id="adminMessageModalLabel">پیام‌های مدیریت</h5>
+        <h5 class="modal-title w-100 text-center" id="adminMessageModalLabel">
+          پیام‌های مدیریت
+        </h5>
       </div>
       <div class="modal-body">
-        {% if message_to_users %}
-        <div>
-          {% for message_user in message_to_users %}
-          <h2 class="fs-5">{{ message_user.title }}</h2>
-          <p class="fs-6">{{ message_user.content }}</p>
-          {% if not forloop.last %}
-          <hr>
-          {% endif %}
-          {% endfor %}
-        </div>
-        {% endif %}
+        {% for message_user in message_to_users %}
+        <h2 class="fs-5">{{ message_user.title }}</h2>
+        <p class="fs-6">{{ message_user.content }}</p>
+        {% if not forloop.last %}<hr />{% endif %} {% endfor %}
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary btn-click" data-bs-dismiss="modal">
+        <button
+          type="button"
+          class="btn btn-secondary btn-click"
+          data-bs-dismiss="modal"
+        >
           بستن
         </button>
       </div>
+      {% endif %}
     </div>
-    {% endif %}
-
   </div>
 </div>

@@ -27,7 +27,6 @@ services:
     env_file:
       - ./hiddify/.env
 
-
   celery_worker:
     # Reuse the app build or image
     image: hiddify  # Use the same image as app service

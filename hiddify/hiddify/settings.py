@@ -13,7 +13,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = True if os.environ.get('DEBUG') == 'True' else False
 IS_DEVELOPMENT = True if os.environ.get('IS_DEVELOPMENT') == 'True' else False
 SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-secret-key').strip()
-ALLOWED_HOSTS = [os.environ.get('ALLOWED_HOSTS', '*').strip()]
+
+ALLOWED_HOSTS_STR = os.environ.get('ALLOWED_HOSTS', '*')
+
+if ALLOWED_HOSTS_STR == '*':
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STR.split(',')]
+
 
 IS_HTTPS_USED = True if os.environ.get('IS_HTTPS_USED') == 'True' else False
 if IS_HTTPS_USED and ALLOWED_HOSTS != ['*']:

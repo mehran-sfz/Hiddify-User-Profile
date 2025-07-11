@@ -46,23 +46,14 @@
 
 <!-- Script to automatically show modal if there are admin messages -->
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        {% if message_to_users %}
-        console.log('Admin message exists');
-        var adminMessageModal = new bootstrap.Modal(
-            document.getElementById("adminMessageModal"),
-            { backdrop: 'static', keyboard: true } // setting backdrop to static prevents closing on outside click
-        );
-        adminMessageModal.show();
-
-        // make sure the body does not scroll when the modal is open
-        document.getElementById("adminMessageModal").addEventListener('hidden.bs.modal', function () {
-            document.body.style.overflow = 'auto'; // open body scroll
-        });
-        {% else %}
-        console.log('No admin message found');
-        {% endif %}
-    });
+  document.addEventListener("DOMContentLoaded", function () {
+    // مودال باید نمایش داده شود اگر کاربر به تلگرام وصل نیست یا پیامی از ادمین وجود دارد
+    {% if not telegram_id and telegram_bot_info or message_to_users %}
+      var adminMessageModal = new bootstrap.Modal(
+        document.getElementById("adminMessageModal"),
+        { backdrop: 'static', keyboard: true } // کاربر نتواند با کلیک بیرون مودال آن را ببندد
+      );
+      adminMessageModal.show();
+    {% endif %}
+  });
 </script>
-
-

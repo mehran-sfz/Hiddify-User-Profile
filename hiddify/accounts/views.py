@@ -213,8 +213,8 @@ class HomeView(TemplateView):
         elif not request.user.profile.is_active:
             return render(request, 'user/home_deactive.html')
 
-        # Fetch the user's plans and configurations
-        plans = Plan.objects.all()
+        # Fetch the user's plans and configurations also filter by status and order by days and price
+        plans = Plan.objects.filter(status=True).order_by('duration', 'price')
         user_configs = Config.objects.filter(user=request.user)
         
         # Get all admin messages
@@ -383,7 +383,8 @@ def ByConfig(request):
     if request.method == 'GET':
 
         try:
-            plan = Plan.objects.all()
+            # order first based on plan.days then by plan.price
+            plan = Plan.objects.filter(status=True).order_by('duration', 'price')
         except Plan.DoesNotExist:
             messages.error(request, 'ارور در دریافت پلن ها')
             return redirect('/home/')
@@ -611,7 +612,7 @@ def AdminPlansView(request):
         return redirect('/home/')
 
     if request.method == 'GET':
-        plans = Plan.objects.all()
+        plans = Plan.objects.filter(status=True).order_by('duration', 'price')
         return render(request, 'admin/admin_plans.html', {'plans': plans})
 
     return render(request, 'admin/admin_plans.html')
