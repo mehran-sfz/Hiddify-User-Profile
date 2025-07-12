@@ -343,7 +343,7 @@ class HomeView(TemplateView):
         except HiddifyAccessInfo.DoesNotExist:
             return None
 
-        subscriptionlink = f'{hiddify_access_info.panel_admin_domain}/{hiddify_access_info.sub_proxy_path}/{config.uuid}/#{hiddify_user.name}'
+        subscriptionlink = f'{hiddify_access_info.subscription_domain}/{hiddify_access_info.sub_proxy_path}/{config.uuid}/#{hiddify_user.name}'
         qrcode = generate_qr_code(subscriptionlink)
         return subscriptionlink, qrcode
 

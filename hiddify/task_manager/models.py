@@ -43,7 +43,7 @@ class HiddifyAccessInfo(models.Model):
     admin_proxy_path = models.CharField(max_length=256, blank=True, null=True)
     panel_admin_domain = models.CharField(max_length=256, blank=True, null=True)
     sub_proxy_path = models.CharField(max_length=256, blank=True, null=True)
-
+    subscription_domain = models.CharField(max_length=256, blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 
