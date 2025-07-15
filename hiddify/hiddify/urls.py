@@ -25,9 +25,6 @@ urlpatterns = [
     # --------------------- Admin URLs ----------------
     path('admin/', admin.site.urls),
 
-    # --------------------- API URLs ----------------
-    path('api/', include('api.urls')), # include the urls of the api app
-    
     # --------------------- Frontend URLs ----------------
     path('', include('accounts.urls')),
     path('', include('client_actions.urls')),

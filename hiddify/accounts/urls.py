@@ -6,9 +6,9 @@ from . import views
 urlpatterns = [
     
     # ------------ Login/Register ------------
-    path('login-register/', views.LoginView, name='login_register'),
-    path('login/', views.LoginView, name='login'),
-    path('register/', views.LoginView, name='register'),
+    path('login-register/', views.LoginRegisterView, name='login_register'),
+    path('login/', views.LoginRegisterView, name='login'),
+    path('register/', views.LoginRegisterView, name='register'),
     path('logout/', views.LogoutView, name='logout'),
     
     # ------------ Admin Panel ------------
