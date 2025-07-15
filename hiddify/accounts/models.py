@@ -2,86 +2,108 @@ import random
 import uuid
 
 from django.conf import settings
-from django.contrib.auth.models import (AbstractBaseUser,  # Base user classes
+from django.contrib.auth.models import (AbstractBaseUser,  # کلاس‌های پایه کاربر
                                         BaseUserManager, PermissionsMixin)
-from django.core.validators import \
-    RegexValidator  # Import for validating phone numbers
-from django.db import models  # Django's ORM for defining model fields
+from django.db import models  # ORM جنگو برای تعریف فیلدهای مدل
+from django.utils.translation import gettext_lazy as _ # برای ترجمه
 
-#------------------------------------ Custom User Model ------------------------------------#
+#------------------------------------ مدیر مدل کاربر سفارشی ------------------------------------#
 
-# Custom manager for the CustomUser model
+# مدیر سفارشی برای مدل CustomUser
 class CustomUserManager(BaseUserManager):
-    # Method to create a regular user
-    def create_user(self, phone_number, password=None, **extra_fields):
-        # Raise an error if no phone number is provided
-        if not phone_number:
-            raise ValueError('The Phone number must be set')
-
-        # Create a user instance with the provided phone number and other fields
-        user = self.model(phone_number=phone_number, **extra_fields)
-        # Set the user's password (will hash it for security)
+    """
+    مدیر سفارشی کاربر که در آن ایمیل به جای نام کاربری، شناسه منحصر به فرد است.
+    """
+    # متد برای ایجاد یک کاربر عادی
+    def create_user(self, email, password=None, **extra_fields):
+        """
+        یک کاربر را با ایمیل و رمز عبور داده شده ایجاد و ذخیره می‌کند.
+        """
+        # اگر ایمیل ارائه نشده باشد، خطا ایجاد می‌کند
+        if not email:
+            raise ValueError(_('The Email must be set'))
+        
+        # ایمیل را نرمال‌سازی می‌کند (مثلاً دامنه را به حروف کوچک تبدیل می‌کند)
+        email = self.normalize_email(email)
+        # یک نمونه کاربر با ایمیل و فیلدهای اضافی ایجاد می‌کند
+        user = self.model(email=email, **extra_fields)
+        # رمز عبور کاربر را تنظیم می‌کند (برای امنیت هش می‌شود)
         user.set_password(password)
-        # Save the user instance to the database
+        # نمونه کاربر را در پایگاه داده ذخیره می‌کند
         user.save(using=self._db)
         return user
 
-    # Method to create a superuser (admin)
-    def create_superuser(self, phone_number, password=None, **extra_fields):
-        # Ensure that superusers have the required permissions
+    # متد برای ایجاد یک ابرکاربر (ادمین)
+    def create_superuser(self, email, password=None, **extra_fields):
+        """
+        یک ابرکاربر را با ایمیل و رمز عبور داده شده ایجاد و ذخیره می‌کند.
+        """
+        # اطمینان حاصل می‌کند که ابرکاربران مجوزهای لازم را دارند
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
 
-        # Use the create_user method to create a superuser
-        return self.create_user(phone_number, password, **extra_fields)
+        # بررسی می‌کند که مقادیر is_staff و is_superuser درست باشند
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError(_('Superuser must have is_staff=True.'))
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError(_('Superuser must have is_superuser=True.'))
+        
+        # از متد create_user برای ایجاد ابرکاربر استفاده می‌کند
+        return self.create_user(email, password, **extra_fields)
 
-# Custom user model replacing email with phone number for authentication
+#------------------------------------ مدل کاربر سفارشی ------------------------------------#
+
+# مدل کاربر سفارشی که ایمیل را جایگزین نام کاربری برای احراز هویت می‌کند
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    # Validator for the phone number to ensure it starts with '09' and is followed by 9 digits
-    phone_regex = RegexValidator(
-        regex=r'^09\d{9}$',  # Regular expression to match '09*********' format
-        message="Phone number must be in the format: '09*********' (starting with '09' followed by 9 digits)."
+    # فیلد ایمیل، با محدودیت منحصر به فرد بودن
+    email = models.EmailField(_('email address'), unique=True)
+
+    # فیلدهای اطلاعات اضافی کاربر (اختیاری)
+    first_name = models.CharField(_('first name'), max_length=150, blank=True)
+    last_name = models.CharField(_('last name'), max_length=150, blank=True)
+
+    # فیلدهای مورد نیاز برای وضعیت کاربر
+    is_staff = models.BooleanField(
+        _('staff status'),
+        default=False,
+        help_text=_('Designates whether the user can log into this admin site.'),
     )
-    
-    # Phone number field, with unique constraint and validation
-    phone_number = models.CharField(validators=[phone_regex], max_length=11, unique=True)
+    is_active = models.BooleanField(
+        _('active'),
+        default=True,
+        help_text=_(
+            'Designates whether this user should be treated as active. '
+            'Unselect this instead of deleting accounts.'
+        ),
+    )
+    # فیلد تاریخ پیوستن کاربر که به صورت خودکار پر می‌شود
+    date_joined = models.DateTimeField(_('date joined'), auto_now_add=True)
 
-    # Additional user information fields (optional)
-    first_name = models.CharField(max_length=30, blank=True)  # First name field (optional)
-    last_name = models.CharField(max_length=30, blank=True)   # Last name field (optional)
-
-    # Required fields for user status
-    is_active = models.BooleanField(default=True)  # Determines if the user account is active
-    is_staff = models.BooleanField(default=False)  # Determines if the user can access the admin panel
-
-    # Auto-populated field for tracking the account creation time
-    date_joined = models.DateTimeField(auto_now_add=True)  # Timestamp of when the user joined
-
-    # Linking the custom manager to this model
+    # اتصال مدیر سفارشی به این مدل
     objects = CustomUserManager()
 
-    # Set the phone number field as the unique identifier (replacing email)
-    USERNAME_FIELD = 'phone_number'
-    # Fields required when creating a superuser; empty as only phone and password are required
+    # تنظیم فیلد ایمیل به عنوان شناسه منحصر به فرد (جایگزین username)
+    USERNAME_FIELD = 'email'
+    # فیلدهای مورد نیاز هنگام ایجاد کاربر؛ خالی است چون فقط ایمیل و رمز عبور لازم است
     REQUIRED_FIELDS = []
 
-    # String representation of the user (usually their phone number)
+    # نمایش رشته‌ای کاربر (ایمیل کاربر)
     def __str__(self):
-        return self.phone_number
+        return self.email
 
-    
-# ------------------------------------ Profile Model ------------------------------------#
+# ------------------------------------ مدل پروفایل ------------------------------------#
 class Profile(models.Model):
     
     user = models.OneToOneField(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
     
-    # A unique UUID for each profile
+    # یک UUID منحصر به فرد برای هر پروفایل
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     
-    # random 14 digit number to be used as invite code automatically generated
+    # کد دعوت ۱۴ رقمی که به صورت خودکار و منحصر به فرد تولید می‌شود
     invite_code = models.CharField(max_length=14, unique=True, editable=False)
     
-    # Reference to the user who invited this user
+    # ارجاع به کاربری که این کاربر را دعوت کرده است
     invited_by = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True, related_name='invited_users')
     
     is_active = models.BooleanField(default=False)
@@ -93,24 +115,26 @@ class Profile(models.Model):
     config_limitation = models.PositiveBigIntegerField(default=3, help_text='The maximum number of configurations a user can create or have at a time.')
 
     def __str__(self):
-        return f'{self.user} - {self.user.phone_number}'
+        # نمایش رشته‌ای پروفایل بر اساس ایمیل کاربر
+        return f'Profile for {self.user.email}'
     
     def save(self, *args, **kwargs):
-        
-        
+        # اگر کاربر توسط شخص دیگری دعوت شده باشد
         if self.invited_by:
-            if self.invited_by.is_active: # Check if the inviter's profile is active
-                self.is_active = True # Set the new user's profile as active
+            # بررسی می‌کند که آیا کاربر دعوت‌کننده فعال است یا خیر
+            if self.invited_by.is_active:
+                self.is_active = True # پروفایل کاربر جدید را فعال می‌کند
 
-        if not self.invite_code: # If the user does not have an invite code
+        # اگر کاربر کد دعوت نداشته باشد، یک کد جدید برای او تولید می‌شود
+        if not self.invite_code:
             self.invite_code = self.generate_unique_invite_code()
-  
+
         super(Profile, self).save(*args, **kwargs)
 
-    # Method to generate a unique invite code
+    # متد برای تولید کد دعوت منحصر به فرد
     def generate_unique_invite_code(self):
-        
         code = ''.join([str(random.randint(0, 9)) for _ in range(14)])
+        # تا زمانی که کد تکراری باشد، کد جدید تولید می‌کند
         while Profile.objects.filter(invite_code=code).exists():
             code = ''.join([str(random.randint(0, 9)) for _ in range(14)])
         return code

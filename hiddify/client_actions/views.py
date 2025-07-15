@@ -275,7 +275,7 @@ def AddOrderView(request):
             if telegram_bot_info:
                 telegram_message = f"""
                 <b>سفارش جدید ثبت شد</b>
-                <b>شماره کاربر:</b> {request.user.phone_number}
+                <b>شماره کاربر:</b> {request.user.email}
                 <b>نام کانفیگ:</b> {hiddify_user.name}
                 <b>UUID:</b> {selected_plan_config_uuid}
                 <b>پلن انتخاب شده:</b> {plan}
@@ -328,7 +328,7 @@ def OrderEditView(request):
                 if telegram_bot_info:
                     telegram_message = f"""
                     <b>سفارش ویرایش شد</b>
-                    <b>شماره کاربر:</b> {request.user.phone_number}
+                    <b>شماره کاربر:</b> {request.user.email}
                     <b>پلن جدید:</b> {order.plan}
                     <b>UUID کانفیگ:</b> {selected_uuid}
                     <b>شماره سفارش:</b> {order.pk}
@@ -464,7 +464,7 @@ def PaymentView(request):
             if telegram_bot_info:
                 telegram_message = f"""
                 <b>پرداخت جدید ثبت شد</b>
-                <b>شماره کاربر:</b> {request.user.phone_number}
+                <b>شماره کاربر:</b> {request.user.email}
                 <b>UUID کانفیگ:</b> {config_uuid}
                 <b>شماره سفارش:</b> {order_pk}
                 <b>کد رهگیری:</b> {tracking_code}

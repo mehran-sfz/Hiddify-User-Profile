@@ -5,7 +5,7 @@ from .models import CustomUser, Profile
 
 @admin.register(CustomUser)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ['phone_number', 'first_name', 'last_name', 'is_active', 'is_staff', 'user_date_joined']
+    list_display = ['email', 'first_name', 'last_name', 'is_active', 'is_staff', 'user_date_joined']
     
     
     # Method to display the date the user joined
@@ -16,12 +16,12 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ['user_phone_number', 'user_first_name', 'user_last_name', 'wallet', 'invited_by', 'invite_code', 'config_limitation' ,'user_date_joined']
+    list_display = ['user_email', 'user_first_name', 'user_last_name', 'wallet', 'invited_by', 'invite_code', 'config_limitation' ,'user_date_joined']
 
-    # Method to display the user's phone number
-    def user_phone_number(self, obj):
-        return obj.user.phone_number
-    user_phone_number.short_description = 'Phone Number'
+    # Method to display the user's Email
+    def user_email(self, obj):
+        return obj.user.email
+    user_email.short_description = 'Email'
 
     # Method to display if the user is active
     def user_first_name(self, obj):
