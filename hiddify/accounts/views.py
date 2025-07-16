@@ -38,7 +38,7 @@ def LoginRegisterView(request):
 
             # Check if email and password are provided
             if not email or not password:
-                messages.error(request, "Please enter both email and password.")
+                messages.error(request, "لطفاً ایمیل و رمز عبور را وارد کنید.")
                 return redirect("/login-register/")
 
             # Authenticate user with email and password
@@ -46,7 +46,7 @@ def LoginRegisterView(request):
 
             if user is not None:
                 login(request, user)
-                messages.success(request, "You have successfully logged in.")
+                messages.success(request, "شما با موفقیت وارد شدید.")
                 # If the user is an admin, redirect to the admin panel; otherwise, redirect to the home page
                 if user.is_staff:
                     return redirect("/admin-panel/")  # Admin panel URL
