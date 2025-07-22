@@ -142,6 +142,7 @@ def BuyNewConfigView(request):
     hiddify_user_data = None
     try:
         # 1. Add a new user in Hiddify
+        
         hiddify_user_data = add_new_user(
             name=name,
             duration=plan.duration,
@@ -169,7 +170,6 @@ def BuyNewConfigView(request):
         config = Config.objects.create(
             user=request.user,
             uuid=hiddify_user_data["uuid"],
-            name=name,  # <<< Improvement: Save the user's custom name
         )
 
         order = Order.objects.create(user=request.user, config=config, plan=plan)
