@@ -7,8 +7,6 @@ from io import BytesIO
 
 import qrcode
 import requests
-from django.conf import settings
-from client_actions.models import Config
 from task_manager.models import HiddifyUser
 
 

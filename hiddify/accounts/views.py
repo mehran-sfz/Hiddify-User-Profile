@@ -396,42 +396,61 @@ class HomeView(TemplateView):
 
 
 def ByConfig(request):
-
+    """
+    Handles the view for a user to buy a configuration.
+    - Authenticates the user.
+    - Retrieves available plans, user's invite code, and existing configurations.
+    - Displays the 'buy_config.html' template with the necessary context.
+    """
     if not request.user.is_authenticated:
-        return redirect("/login-register/")
+        return redirect("login_register") # Use URL names instead of hardcoded paths
 
     if request.method == "GET":
-
         try:
-            # order first based on plan.days then by plan.price
-            plan = Plan.objects.filter(status=True).order_by("duration", "price")
-        except Plan.DoesNotExist:
-            messages.error(request, "ارور در دریافت پلن ها")
-            return redirect("/home/")
-        except Exception as e:
-            add_admin_log(
-                action=f"Error in fetching plans: {str(e)}",
-                category="admin",
-                user=request.user,
-            )
-            messages.error(request, f"ارور کد 12")
-            return redirect("/home/")
-
-        try:
+            # Fetch all necessary data in one block
+            plans = Plan.objects.filter(status=True).order_by("duration", "price")
+            
+            # Use select_related to avoid extra queries for the profile
             invite_code = request.user.profile.invite_code
+            
+            # Fetch user's configs and related HiddifyUser names efficiently
+            user_configs = Config.objects.filter(user=request.user)
+            
+            # Get HiddifyUser info in a single, optimized query
+            hiddify_user_configs = {
+                str(hu.uuid): hu.name 
+                for hu in HiddifyUser.objects.filter(uuid__in=user_configs.values_list('uuid', flat=True))
+            }
+
+        except Plan.DoesNotExist:
+            messages.error(request, "No available plans found.")
+            return redirect("home") # Use URL names
+        except AttributeError:
+            # This handles cases where user.profile might not exist
+            messages.error(request, "User profile not found. Error Code: 13")
+            # Log this specific issue for admin review
+            # add_admin_log(...) 
+            return redirect("home")
         except Exception as e:
-            add_admin_log(
-                action=f"Error in fetching invite code: {str(e)}",
-                category="admin",
-                user=request.user,
-            )
-            messages.error(request, f"ارور کد 13")
-            return redirect("/home/")
+            # General catch-all for other unexpected errors
+            # add_admin_log(
+            #     action=f"Error in buy_config_view: {str(e)}",
+            #     category="critical",
+            #     user=request.user,
+            # )
+            messages.error(request, "An unexpected error occurred. Please try again. Error Code: 15")
+            return redirect("home")
 
-        return render(
-            request, "user/buy_config.html", {"plans": plan, "invite_code": invite_code}
-        )
+        context = {
+            "plans": plans,
+            "invite_code": invite_code,
+            "configs": hiddify_user_configs,
+        }
+        return render(request, "user/buy_config.html", context)
 
+    # You might want to handle POST requests here if the form submission is on the same URL
+    # For now, redirecting if not a GET request
+    return redirect("home")
 
 # ------------------------------------ Admin Panel Views ------------------------------------#
 

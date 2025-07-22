@@ -232,10 +232,9 @@ def disable_not_paid_users(self):
                     continue
                 
                 # send admin log to telegram
-                message = f'کاربری با uuid: {order.config.uuid} و نام: {hiddify_config.name} به دلیل عدم پرداخت هزینه، غیرفعال شد.'
+                message = f'User with UUID {order.config.uuid} and name {hiddify_config.name} has been disabled for failure to pay.'
                 send_telegram_message(token=telegram_info.token, chat_id=telegram_info.admin_user_id, message=message,)
-            
-            
+             
         except Exception as e:
             logger.error(f'Error disabling user: {str(e)}')
             continue

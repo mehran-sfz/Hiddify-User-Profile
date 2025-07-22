@@ -2,35 +2,78 @@
   <div class="row w-100 justify-content-md-center align-items-stretch">
 
     <div class="col-12 col-md-6 col-lg-5 mb-4 mb-lg-0">
-      <div class="card h-100 form-card">
-        <div class="card-header">
-          <h5 class="card-title form-card-header">
-            <i class="fas fa-shopping-cart me-2"></i>خرید کانفیگ جدید</h5>
+        <div class="card h-100 form-card">
+            <div class="card-header">
+                <h5 class="card-title form-card-header">
+                    <i class="fas fa-shopping-cart me-2"></i>خرید یا تمدید کانفیگ
+                </h5>
+            </div>
+            <div class="card-body form-card-body">
+                <form id="buy-config-form" 
+                    action="{% url 'buynewconfig' %}"  data-new-url="{% url 'buynewconfig' %}" 
+                    data-update-url="{% url 'updateconfig' %}" 
+                    method="POST">
+                    {% csrf_token %}
+
+                    <input type="hidden" id="action_type" name="action_type" value="new">
+                    <input type="hidden" id="config_uuid" name="config_uuid" value="">
+
+                    <div class="mb-3">
+                        <label for="config-selection" class="form-label">انتخاب کانفیگ:</label>
+                        <select id="config-selection" class="form-select" required>
+                            
+                            {% if configs %}
+                                {# This part is shown to users who have existing configs #}
+                                <option value="" disabled selected>--- یک گزینه را انتخاب کنید ---</option>
+                                <option value="new">سفارش کانفیگ جدید</option>
+                                <optgroup label="تمدید کانفیگ‌های موجود">
+                                    {% for uuid, name in configs.items %}
+                                        <option value="{{ uuid }}">تمدید کانفیگ : {{ name }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                            {% else %}
+                                {# This part is shown only to users with no configs #}
+                                <option value="new" selected>سفارش کانفیگ جدید</option>
+                            {% endif %}
+
+                        </select>
+                    </div>
+
+                    <div id="new-config-name-wrapper" class="mb-3">
+                        <label for="new-config-name" class="form-label">نام کانفیگ جدید:</label>
+                        <input type="text" 
+                            id="new-config-name" 
+                            name="name" 
+                            class="form-control" 
+                            placeholder="نام دلخواه خود را وارد کنید" 
+                            required 
+                            minlength="3" 
+                            maxlength="20"
+                            title="نام کانفیگ باید بین ۳ تا ۲۰ کاراکتر باشد."
+                        />
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="buyAccountOptions" class="form-label">انتخاب پلن:</label>
+                        <select id="buyAccountOptions" class="form-select" name="plan" required>
+                            {% if plans %}
+                                {% for plan in plans %}
+                                    <option value="{{ plan.pk }}">{{ plan }}</option>
+                                {% endfor %}
+                            {% else %}
+                                <option disabled>هیچ پلنی یافت نشد</option>
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <div class="mt-auto pt-3">
+                        <button type="submit" class="btn btn-success w-100 py-2">ثبت سفارش و خرید</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="card-body form-card-body">
-          <form id="buy-config" action="{% url 'buynewconfig' %}" method="POST">
-            {% csrf_token %}
-            <div class="mb-3">
-              <label for="name" class="form-label">نام کانفیگ:</label>
-              <input type="text" id="name" name="name" class="form-control" placeholder="نام دلخواه خود را وارد کنید" required />
-            </div>
-            <div class="mb-4">
-              <label for="buyAccountOptions" class="form-label">انتخاب پلن:</label>
-              <select id="buyAccountOptions" class="form-select" name="accountOption" required>
-                {% if plans %}
-                  {% for plan in plans %}
-                    <option value="{{ plan.pk }}">{{ plan }}</option>
-                  {% endfor %}
-                {% endif %}
-              </select>
-            </div>
-            <div class="mt-auto pt-3">
-              <button type="submit" class="btn btn-success w-100 py-2">ثبت سفارش و خرید</button>
-            </div>
-          </form>
-        </div>
-      </div>
     </div>
+
 
     <div class="col-12 col-md-6 col-lg-5">
       <div class="card h-100 form-card">

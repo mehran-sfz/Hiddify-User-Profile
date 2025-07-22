@@ -72,16 +72,26 @@
     {% if config.package_days <= 10 or config.left_trafic <= 5 %}
       {% if config.last_order == None or config.last_order.status == 'payed' and not config.last_order.pending %}
         <div class="card-footer">
-          <form method="post" action="{% url 'updateconfig' %}" class="d-flex flex-column flex-md-row space-between-sm">
+        <form method="post" action="{% url 'updateconfig' %}" class="d-flex flex-column flex-md-row space-between-sm">
             {% csrf_token %}
             <input type="hidden" name="config_uuid" value="{{ config.uuid }}" />
             <div class="form-group mb-3 mb-md-0 w-100 d-flex justify-content-center">
-              <select id="accountOptions_{{ forloop.counter }}" class="form-select" name="accountOption" style="display: inline-block; width: 100%; max-width: 200px">
-                {% if plans %}{% for plan in plans %}<option value="{{ plan.pk }}">{{ plan }}</option>{% endfor %}{% endif %}
-              </select>
+
+                {# ------------------تغییر اصلی اینجاست------------------ #}
+                
+                <select id="accountOptions_{{ forloop.counter }}" class="form-select" name="plan" style="display: inline-block; width: 100%; max-width: 200px">
+                
+                {# ---------------------------------------------------- #}
+
+                    {% if plans %}
+                        {% for plan in plans %}
+                            <option value="{{ plan.pk }}">{{ plan }}</option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
             </div>
             <button type="submit" class="btn btn-outline-primary btn-click w-md-auto">تمدید</button>
-          </form>
+        </form>
         </div>
       {% endif %}
     {% endif %}

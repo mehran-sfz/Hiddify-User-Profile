@@ -177,3 +177,54 @@ document
   });
 
   
+
+// This function initializes the logic for the config purchase/renewal form.
+// It's designed to be unique to avoid conflicts in a global JS file.
+function initBuyConfigForm() {
+    // Find the form on the page. If it doesn't exist, do nothing.
+    const form = document.getElementById('buy-config-form');
+    if (!form) {
+        return;
+    }
+
+    // Get references to all necessary elements within the form
+    const configSelection = form.querySelector('#config-selection');
+    const newNameWrapper = form.querySelector('#new-config-name-wrapper');
+    const newNameInput = form.querySelector('#new-config-name');
+    const actionTypeInput = form.querySelector('#action_type');
+    const configUuidInput = form.querySelector('#config_uuid');
+
+    // This is the core function that shows/hides fields and updates the form action
+    const updateFormState = () => {
+        const selectedValue = configSelection.value;
+        const newUrl = form.dataset.newUrl;         // خواندن آدرس جدید از دیتا اتریبیوت
+        const updateUrl = form.dataset.updateUrl;   // خواندن آدرس آپدیت از دیتا اتریبیوت
+
+        if (selectedValue === 'new') {
+            // --- NEW CONFIG MODE ---
+            form.action = newUrl; // **تنظیم آدرس فرم برای ساخت کانفیگ جدید**
+
+            newNameWrapper.style.display = 'block';
+            newNameInput.required = true;
+            actionTypeInput.value = 'new';
+            configUuidInput.value = '';
+        } else {
+            // --- RENEW MODE ---
+            form.action = updateUrl; // **تنظیم آدرس فرم برای آپدیت کانفیگ**
+
+            newNameWrapper.style.display = 'none';
+            newNameInput.required = false;
+            actionTypeInput.value = 'renew';
+            configUuidInput.value = selectedValue;
+        }
+    };
+
+    // Add an event listener to the dropdown
+    configSelection.addEventListener('change', updateFormState);
+
+    // Call the function once immediately to set the correct initial state
+    updateFormState();
+}
+
+// Wait for the entire page to load, then run our form initialization function.
+document.addEventListener('DOMContentLoaded', initBuyConfigForm);
