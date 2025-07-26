@@ -6,10 +6,7 @@ from plans.models import Plan
 
 
 def Add_Edit_PlanView(request):
-    
-    if not request.user.is_authenticated or not request.user.is_staff:
-        return redirect('/home/')
-    
+
     if request.method == 'POST':
         
         location = request.POST.get('location')
@@ -121,9 +118,7 @@ def Add_Edit_PlanView(request):
     return redirect('/admin-panel/plans')
 
 def Delete_PlanView(request, pk):    
-    if not request.user.is_authenticated or not request.user.is_staff:
-        return redirect('/home/')
-    
+
     instance = get_object_or_404(Plan, pk=pk)
     
     if instance:

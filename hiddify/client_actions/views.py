@@ -27,9 +27,6 @@ import task_manager.hiddify_actions as hiddify_actions
 
 @transaction.atomic
 def AddConfigView(request):
-    # Redirect if the user is not authenticated
-    if not request.user.is_authenticated:
-        return redirect("/login-register/")
 
     # Process POST request
     if request.method == "POST":
@@ -77,8 +74,6 @@ def AddConfigView(request):
 
 @transaction.atomic
 def BuyNewConfigView(request):
-    if not request.user.is_authenticated:
-        return redirect("/login-register/")
 
     if request.method != "POST":
         # If the method is GET, redirect to the purchase page (or you can render the template).
@@ -228,13 +223,11 @@ def BuyNewConfigView(request):
 
         messages.error(request, "خطا در ثبت سفارش شما. لطفاً با پشتیبانی تماس بگیرید.")
         return redirect("/buyconfig/")
-
-
-@transaction.atomic 
-def AddOrderView(request):
-    if not request.user.is_authenticated:
-        return redirect("/login-register/")
     
+
+@transaction.atomic
+def AddOrderView(request):
+
     if request.method != "POST":
         return redirect("/home/")  # Redirect if not a POST request
 
@@ -308,12 +301,9 @@ def AddOrderView(request):
         )
         messages.error(request, "خطای پیش‌ بینی‌ نشده‌ای رخ داد. لطفا دوباره تلاش کنید.")
         return redirect("/home/")
-
-
+    
+    
 def OrderEditView(request):
-    # Redirect if the user is not authenticated
-    if not request.user.is_authenticated:
-        return redirect("/login-register/")
 
     if request.method == "POST":
         selected_plan = request.POST.get("selected_plan")
@@ -383,9 +373,6 @@ def OrderEditView(request):
 
 
 def DeleteOrderView(request):
-    # Redirect if the user is not authenticated
-    if not request.user.is_authenticated:
-        return redirect("/login-register/")
 
     if request.method == "POST":
         order_pk = request.POST.get("order_pk")
@@ -452,9 +439,6 @@ def DeleteOrderView(request):
 
 
 def PaymentView(request):
-    # Redirect if the user is not authenticated
-    if not request.user.is_authenticated:
-        return redirect("/login-register/")
 
     if request.method == "POST":
         order_pk = request.POST.get("order_pk")
@@ -521,8 +505,6 @@ def PaymentView(request):
 
 
 def DeleteOrderAdminView(request):
-    if not request.user.is_authenticated or not request.user.is_staff:
-        return redirect("/login-register/")
 
     if request.method == "POST":
         order_pk = request.POST.get("order_pk")
@@ -595,8 +577,6 @@ def DeleteOrderAdminView(request):
 
 
 def ConfirmOrderAdminView(request):
-    if not request.user.is_authenticated or not request.user.is_staff:
-        return redirect("/login-register/")
 
     if request.method == "POST":
         payment_pk = request.POST.get("payment_pk")

@@ -24,9 +24,6 @@ from telegram_bot.models import Telegram_Bot_Info
 
 
 def LoginRegisterView(request):
-    # if the user is already authenticated, redirect to home
-    if request.user.is_authenticated:
-        return redirect("home")  # Replace 'home' with the name of your home URL
 
     if request.method == "POST":
         form_id = request.POST.get("form_id")
@@ -47,14 +44,7 @@ def LoginRegisterView(request):
             if user is not None:
                 login(request, user)
                 messages.success(request, "شما با موفقیت وارد شدید.")
-                # If the user is an admin, redirect to the admin panel; otherwise, redirect to the home page
-                if user.is_staff:
-                    return redirect("/admin-panel/")  # Admin panel URL
-                else:
-                    return redirect("/home/")  # Home page URL
-            else:
-                messages.error(request, "ایمیل یا رمز عبور اشتباه است.")
-                return redirect("/login-register/")
+                return redirect("/home/")  # Home page URL
 
         # ------------------- Registration Form -------------------
         elif form_id == "register-form":
@@ -126,18 +116,12 @@ def LoginRegisterView(request):
 
 
 def LogoutView(request):
-
-    if request.user.is_authenticated:
-
-        logout(request)
-        return redirect("/login-register/")
-    else:
-        return redirect("/login-register/")
+    
+    logout(request)
+    return redirect("/login-register/")
 
 
 def OrdersView(request):
-    if not request.user.is_authenticated:
-        return redirect("/login-register/")
 
     if request.method == "GET":
 
@@ -161,8 +145,6 @@ def OrdersView(request):
 
 
 def AddinviteCodeView(request):
-    if not request.user.is_authenticated:
-        return redirect("/login-register/")
 
     if request.method == "POST":
         invite_code = request.POST.get("invite_code")
@@ -198,16 +180,6 @@ class HomeView(TemplateView):
     template_name = "user/home_active.html"
 
     def get(self, request, *args, **kwargs):
-        # Check if the user is authenticated
-        if not request.user.is_authenticated:
-            return redirect("/login-register/")
-
-        elif request.user.is_staff:
-            return redirect("/admin/")
-
-        # Check if user has an active profile
-        elif not request.user.profile.is_active:
-            return render(request, "user/home_deactive.html")
 
         # Fetch the user's plans and configurations also filter by status and order by days and price
         plans = Plan.objects.filter(status=True).order_by("duration", "price")
@@ -402,9 +374,7 @@ def ByConfig(request):
     - Retrieves available plans, user's invite code, and existing configurations.
     - Displays the 'buy_config.html' template with the necessary context.
     """
-    if not request.user.is_authenticated:
-        return redirect("login_register") # Use URL names instead of hardcoded paths
-
+    
     if request.method == "GET":
         try:
             # Fetch all necessary data in one block
@@ -452,13 +422,17 @@ def ByConfig(request):
     # For now, redirecting if not a GET request
     return redirect("home")
 
+
+def HomeDeactiveView(request):
+    """
+    Renders the home deactive page for users whose profiles are inactive.
+    """
+    return render(request, "user/home_deactive.html")
+
 # ------------------------------------ Admin Panel Views ------------------------------------#
 
 
 def AdminPanelView(request):
-
-    if not request.user.is_authenticated or not request.user.is_staff:
-        return redirect("/home/")
 
     if request.method == "GET":
 
@@ -505,9 +479,6 @@ def AdminPanelView(request):
 
 
 def AdminUsersView(request):
-    # check if user is admin or not
-    if not request.user.is_authenticated and not request.user.is_staff:
-        return redirect("/login-register/")
 
     if request.method == "GET":
         profiles = Profile.objects.all()
@@ -563,9 +534,6 @@ def AdminUsersView(request):
 
 
 def AdminConfigsView(request):
-
-    if not request.user.is_authenticated or not request.user.is_staff:
-        return redirect("/home/")
 
     if request.method == "GET":
 
@@ -635,9 +603,6 @@ def AdminConfigsView(request):
 
 
 def AdminOrdersView(request):
-    # check if user is admin or not
-    if not request.user.is_authenticated or not request.user.is_staff:
-        return redirect("/home/")
 
     if request.method == "GET":
 
@@ -666,9 +631,6 @@ def AdminOrdersView(request):
 
 def AdminPlansView(request):
 
-    if not request.user.is_authenticated or not request.user.is_staff:
-        return redirect("/home/")
-
     if request.method == "GET":
         plans = Plan.objects.filter(status=True).order_by("duration", "price")
         return render(request, "admin/admin_plans.html", {"plans": plans})
@@ -677,10 +639,7 @@ def AdminPlansView(request):
 
 
 def AdminLogsView(request):
-
-    if not request.user.is_authenticated or not request.user.is_staff:
-        return redirect("/home/")
-
+    
     if request.method == "GET":
         category = request.GET.get("category")
         page = request.GET.get("page", 1)  # شماره صفحه‌ای که از URL می‌گیریم. پیش‌فرض 1
@@ -720,9 +679,6 @@ def AdminLogsView(request):
 
 
 def AdminMessageView(request):
-
-    if not request.user.is_authenticated or not request.user.is_staff:
-        return redirect("/home/")
 
     if request.method == "GET":
 

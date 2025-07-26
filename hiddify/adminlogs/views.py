@@ -7,9 +7,6 @@ from adminlogs.models import Message
 
 def SendMessageToAll(request):
     
-    if not request.user.is_authenticated or not request.user.is_staff:
-        return redirect('/home/')
-    
     if request.method == 'POST':
             
         title = request.POST.get('title', None)
@@ -30,10 +27,7 @@ def SendMessageToAll(request):
     return redirect('/admin-panel/messages')
         
 def DeactiveMessage(request, pk):
-    
-    if not request.user.is_authenticated or not request.user.is_staff:
-        return redirect('/home/')
-    
+
     instance = get_object_or_404(Message, pk=pk)
     
     if instance:

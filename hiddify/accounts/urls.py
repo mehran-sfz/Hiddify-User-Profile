@@ -25,7 +25,9 @@ urlpatterns = [
     # ------------ User Panel ------------
     path('', RedirectView.as_view(url='home/', permanent=False), name='root-redirect'),
     path('home/', views.HomeView.as_view(), name='home'),
+    path('home/deactive/', views.HomeDeactiveView, name='home_deactive'),
     path('orders/', views.OrdersView, name='orders'),
     path('buyconfig/', views.ByConfig, name='buyconfig'),
     path('addinvitecode/', views.AddinviteCodeView, name='addinvitecode'),
+
 ]
