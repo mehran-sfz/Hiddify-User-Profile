@@ -33,10 +33,11 @@ class RoleAndStatusCheckMiddleware(MiddlewareMixin):
         if request.user.is_staff:
             is_on_custom_admin = request.path.startswith('/admin-panel/')
             is_on_default_admin = request.path.startswith('/admin/')
+            is_on_payment_screenshot = request.path.startswith('/payment-screenshot/')
             is_on_logout = request.path == reverse('logout')
 
             # If a staff user is not in one of the allowed admin areas, redirect them.
-            if not (is_on_custom_admin or is_on_default_admin or is_on_logout):
+            if not (is_on_custom_admin or is_on_default_admin or is_on_payment_screenshot or is_on_logout):
                 return redirect('admin-panel') # The URL name for your admin panel's home
             
             # If the staff user is in an allowed area, do nothing and proceed.
