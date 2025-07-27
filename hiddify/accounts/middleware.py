@@ -15,9 +15,11 @@ class RoleAndStatusCheckMiddleware(MiddlewareMixin):
                     reverse('register'),
                     reverse('logout'),
                     reverse('telegram_webhook'),
+                    reverse('addinvitecode'),
+                    reverse('addconfig'),
                 ]
             except NoReverseMatch:
-                allowed_unauthenticated_paths = ['/login-register/', '/login/', '/register/', '/logout/', '/telegram-webhook/']
+                allowed_unauthenticated_paths = ['/login-register/', '/login/', '/register/', '/logout/', '/telegram-webhook/', '/addconfig/', '/addinvitecode/']
 
             if request.path not in allowed_unauthenticated_paths:
                 return redirect('login_register')
