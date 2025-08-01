@@ -16,12 +16,14 @@ body {
   position: relative;
   min-height: 100vh;
   z-index: 2;
-  overflow: hidden;
+  /* overflow: hidden;  این خط حذف شد */
   margin: 0;
   padding: 0;
   height: 100%;
   width: 100%;
 }
+
+
 
 body::before {
   content: "";
