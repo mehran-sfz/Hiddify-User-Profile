@@ -28,4 +28,12 @@ def change_user_password_by_email(email, new_password):
     except Exception as e:
         print(f"failed to change password for user with email '{email}': {e}")
         return False
-    
+
+
+def change_all_user_emails_to_lower_case():
+    User = get_user_model()
+    users = User.objects.all()
+    for user in users:
+        user.email = user.email.strip().lower()
+        user.save()
+    print("All user emails have been changed to lower case.")

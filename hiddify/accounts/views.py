@@ -38,6 +38,8 @@ def LoginRegisterView(request):
                 messages.error(request, "لطفاً ایمیل و رمز عبور را وارد کنید.")
                 return redirect("/login-register/")
 
+            email = email.strip().lower()
+
             # Authenticate user with email and password
             user = authenticate(request, email=email, password=password)
 
@@ -63,6 +65,7 @@ def LoginRegisterView(request):
             # Validate email format
             try:
                 validate_email(email)
+                email = email.strip().lower()
             except ValidationError:
                 messages.error(request, "فرمت ایمیل وارد شده صحیح نیست.")
                 return redirect("/login-register/")
@@ -429,8 +432,8 @@ def HomeDeactiveView(request):
     """
     return render(request, "user/home_deactive.html")
 
-# ------------------------------------ Admin Panel Views ------------------------------------#
 
+# ------------------------------------ Admin Panel Views ------------------------------------#
 
 def AdminPanelView(request):
 
@@ -534,29 +537,32 @@ def AdminUsersView(request):
 
 
 def AdminConfigsView(request):
-
     if request.method == "GET":
-
         filter = request.GET.get("filter")
+        
+        # ۱. کوئری بر اساس فیلتر مثل قبل انجام می‌شود
         if filter == "active":
-            configs = HiddifyUser.objects.filter(enable=True, is_active=True)
-
+            configs_list = HiddifyUser.objects.filter(enable=True, is_active=True).order_by('-id')
         elif filter == "inactive":
-            configs = HiddifyUser.objects.filter(enable=False)
-
+            configs_list = HiddifyUser.objects.filter(enable=False).order_by('-id')
         elif filter == "package_ended":
-            configs = HiddifyUser.objects.filter(enable=True, is_active=False)
-
+            configs_list = HiddifyUser.objects.filter(enable=True, is_active=False).order_by('-id')
         else:
-            configs = HiddifyUser.objects.all()
+            configs_list = HiddifyUser.objects.all().order_by('-id')
+        
+        # ۲. منطق صفحه‌بندی اضافه می‌شود
+        paginator = Paginator(configs_list, 30)  # هر صفحه ۳۰ آیتم خواهد داشت
+        page_number = request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
 
         return render(
-            request, "admin/admin_configs.html", {"configs": configs, "filter": filter}
+            request, 
+            "admin/admin_configs.html", 
+            {"page_obj": page_obj, "filter": filter} # به جای configs از page_obj استفاده می‌کنیم
         )
 
     elif request.method == "POST":
         action = request.POST.get("action")
-
         if action == "on_off":
             hidify_user_uuid = request.POST.get("hidify_user_uuid")
             if not hidify_user_uuid:
@@ -565,8 +571,8 @@ def AdminConfigsView(request):
 
             try:
                 hiddify_access_info = HiddifyAccessInfo.objects.latest("created_date")
-            except Exception as e:
-                messages.warning(request, "خطا در انجام عملیات", e)
+            except HiddifyAccessInfo.DoesNotExist:
+                messages.warning(request, "اطلاعات دسترسی Hiddify یافت نشد.")
                 return redirect("/admin-panel/configs/")
 
             hiddify_api_key = hiddify_access_info.hiddify_api_key
@@ -591,42 +597,53 @@ def AdminConfigsView(request):
                     else:
                         messages.warning(request, "با موفقیت غیر فعال شد")
                 else:
-                    messages.error(
-                        request, "خطا در تغییر وضعیت کاربر"
-                    )  # اضافه کردن پیام خطا برای وضعیت ناموفق on_off_user
+                    messages.error(request, "خطا در تغییر وضعیت کاربر")
 
             except HiddifyUser.DoesNotExist:
                 messages.error(request, "کاربر یافت نشد")
-                return redirect("/admin-panel/configs/")
-
-    return redirect("/admin-panel/configs/")
+        
+        # برای حفظ صفحه و فیلتر فعلی بعد از POST
+        current_filter = request.POST.get("filter", "")
+        current_page = request.POST.get("page", "1")
+        redirect_url = f"/admin-panel/configs/?page={current_page}"
+        if current_filter:
+            redirect_url += f"&filter={current_filter}"
+            
+        return redirect(redirect_url)
 
 
 def AdminOrdersView(request):
-
     if request.method == "GET":
+        # ۱. تمام سفارش‌ها را با pre-fetch کردن کانفیگ مربوطه دریافت می‌کنیم
+        # این کار باعث بهینه‌سازی کوئری دیتابیس می‌شود
+        orders_list = Order.objects.select_related('config').all().order_by("-id")
 
-        # Fetch all orders
-        orders = Order.objects.all().order_by("-id")
+        # ۲. منطق صفحه‌بندی را اضافه می‌کنیم
+        paginator = Paginator(orders_list, 30)  # هر صفحه ۳۰ سفارش
+        page_number = request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
 
-        # Fetch the UUIDs from the Config model and related Hiddify user data
-        order_uuids = Config.objects.values_list("uuid", flat=True)
+        # ۳. فقط برای سفارش‌های موجود در صفحه فعلی، اطلاعات Hiddify را می‌گیریم
+        # این کار باعث می‌شود به جای همه UUIDها، فقط UUIDهای صفحه فعلی بررسی شوند
+        
+        # ابتدا UUID های کانفیگ‌های سفارش‌های صفحه فعلی را استخراج می‌کنیم
+        current_page_orders = page_obj.object_list
+        order_uuids = [
+            order.config.uuid for order in current_page_orders if order.config
+        ]
+
+        # سپس نام‌های Hiddify مربوط به این UUIDها را می‌گیریم
         hiddify_entries = HiddifyUser.objects.filter(uuid__in=order_uuids).values(
             "uuid", "name"
         )
-
-        # Create a dictionary mapping UUIDs to Hiddify user names
         uuid_to_name = {entry["uuid"]: entry["name"] for entry in hiddify_entries}
 
-        # Attach the Hiddify name to each order (add a custom attribute 'name')
-        for order in orders:
-            # Safely access order.config and order.config.uuid, handling cases where they may be None
-            # payment = order.config.exists():
+        # در نهایت، نام Hiddify را به هر سفارش در صفحه فعلی اضافه می‌کنیم
+        for order in page_obj:  # می‌توان مستقیم روی page_obj حلقه زد
             order_uuid = getattr(order.config, "uuid", None)
-            # Get the name associated with the UUID, or None if not found
-            order.name = uuid_to_name.get(order_uuid, None)
+            order.name = uuid_to_name.get(order_uuid, "نامشخص") # یک مقدار پیش‌فرض
 
-        return render(request, "admin/admin_orders.html", {"orders": orders})
+        return render(request, "admin/admin_orders.html", {"page_obj": page_obj})
 
 
 def AdminPlansView(request):

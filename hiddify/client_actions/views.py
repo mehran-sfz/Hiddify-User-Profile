@@ -450,6 +450,13 @@ def PaymentView(request):
         if not (order_pk and config_uuid and (payment_picture or tracking_code)):
             messages.error(request, "لطفا تمامی فیلدها را پر کنید")
             return redirect("/home/")
+        
+        # check picture format
+        if payment_picture:
+            if not payment_picture.name.endswith((".png", ".jpg", ".jpeg")):
+                messages.error(request, "فرمت تصویر نامعتبر است")
+                # redirect to the last page
+                return redirect(request.META.get("HTTP_REFERER", "/home/"))
 
         try:
             # Create the payment entry

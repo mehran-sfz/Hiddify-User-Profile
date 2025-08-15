@@ -92,6 +92,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+    def save(self, *args, **kwargs):
+        # ایمیل را به حروف کوچک تبدیل می‌کند
+        self.email = self.email.strip().lower()
+        super().save(*args, **kwargs)
+
 # ------------------------------------ مدل پروفایل ------------------------------------#
 class Profile(models.Model):
     
