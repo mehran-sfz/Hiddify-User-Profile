@@ -128,7 +128,7 @@ def OrdersView(request):
 
     if request.method == "GET":
 
-        orders = request.user.orders.all()
+        orders = request.user.orders.all().order_by('-id')
         order_uuids = request.user.config.values_list("uuid", flat=True)
         hiddify_entries = HiddifyUser.objects.filter(uuid__in=order_uuids).values(
             "uuid", "name"

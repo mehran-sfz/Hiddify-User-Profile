@@ -29,8 +29,10 @@ class Config(models.Model):
         super(Config, self).save(*args, **kwargs)
 
     def __str__(self):
-        return self.uuid
-    
+        short_uuid = f"{self.uuid[:5]}...{self.uuid[-5:]}"
+        email = self.user.email.split('@')[0]
+        return f"{self.pk} | {email} | {short_uuid}"
+
 class Order(models.Model):
     user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='orders', null=True, blank=False)
     config = models.ForeignKey(to=Config, on_delete=models.SET_NULL, null=True, blank=False, related_name='order_configs')
@@ -46,7 +48,8 @@ class Order(models.Model):
         verbose_name_plural = 'Orders'
     
     def __str__(self):
-        return f"{self.config} - {self.plan}"
+        return f"{self.pk} | {self.plan} | {self.config}"
+    
     
 class Payment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='user_payments', null=True, blank=False)
