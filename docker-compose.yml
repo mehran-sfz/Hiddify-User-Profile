@@ -102,16 +102,25 @@ services:
     depends_on:
       - app
 
-  certbot:
+
+certbot:
     image: certbot/certbot
     container_name: certbot
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    
-    # change the command to your needs replace email and domain with your own
-    command: certonly --webroot -w /var/www/certbot --force-renewal --email YOUREMAIL@EMAIL.COM -d YOUTDOMAIN.COM --agree-tos
-
+    entrypoint: >
+          /bin/sh -c "
+          trap exit TERM;
+          if [ ! -d /etc/letsencrypt/live/batmanam.sbs ]; then
+            echo 'No certificate found, issuing new one';
+            certbot certonly --webroot -w /var/www/certbot --email YOUREMAIL@EMAIL.COM -d YOUTDOMAIN.COM --agree-tos --non-interactive;
+          fi;
+          while :; do
+            echo 'Running renew';
+            certbot renew --webroot -w /var/www/certbot --non-interactive;
+            sleep 12h;
+          done"
 
 volumes:
   static:

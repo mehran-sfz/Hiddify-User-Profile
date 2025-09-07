@@ -1,6 +1,6 @@
 @font-face {
-  font-family: "IranSans";
-  src: url("{% static 'font/iransans/IRANSans.ttf' %}") format("truetype");
+  font-family: "Yekan";
+  src: url("font/B_Yekan/Yekan.ttf") format("truetype");
 }
 
 body {
