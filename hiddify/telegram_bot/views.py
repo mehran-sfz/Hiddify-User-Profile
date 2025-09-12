@@ -1,11 +1,11 @@
 import logging
 
+from accounts.models import Profile
 from django.db import transaction
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.models import Profile
 from telegram_bot.models import Telegram_account
 
 logger = logging.getLogger(__name__)

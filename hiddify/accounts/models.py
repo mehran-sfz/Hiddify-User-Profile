@@ -2,10 +2,10 @@ import random
 import uuid
 
 from django.conf import settings
-from django.contrib.auth.models import (AbstractBaseUser,  # کلاس‌های پایه کاربر
-                                        BaseUserManager, PermissionsMixin)
+from django.contrib.auth.models import AbstractBaseUser  # کلاس‌های پایه کاربر
+from django.contrib.auth.models import BaseUserManager, PermissionsMixin
 from django.db import models  # ORM جنگو برای تعریف فیلدهای مدل
-from django.utils.translation import gettext_lazy as _ # برای ترجمه
+from django.utils.translation import gettext_lazy as _  # برای ترجمه
 
 #------------------------------------ مدیر مدل کاربر سفارشی ------------------------------------#
 

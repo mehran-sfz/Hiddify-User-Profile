@@ -1,121 +1,72 @@
 from datetime import date
 
+from accounts.forms import LoginForm, RegisterForm
+from accounts.models import CustomUser, Profile
+from adminlogs.action import add_admin_log
+from adminlogs.models import AdminLog, Message
+from client_actions.models import Config, Order
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Sum
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.generic import TemplateView
-
-from accounts.models import CustomUser, Profile
-from adminlogs.action import add_admin_log
-from adminlogs.models import AdminLog, Message
-from client_actions.models import Config, Order
 from plans.models import Bank_Information, Plan
 from task_manager.hiddify_actions import generate_qr_code, on_off_user
 from task_manager.models import HiddifyAccessInfo, HiddifyUser
+
 from telegram_bot.models import Telegram_Bot_Info
 
 # ------------------------------------ User Panel Views ------------------------------------#
 
-
 def LoginRegisterView(request):
+    login_form = LoginForm()
+    register_form = RegisterForm()
 
     if request.method == "POST":
         form_id = request.POST.get("form_id")
 
-        # ------------------- Login Form -------------------
         if form_id == "login-form":
-            email = request.POST.get("email")
-            password = request.POST.get("password")
+            login_form = LoginForm(request.POST)
+            if login_form.is_valid():
+                email = login_form.cleaned_data.get('email').lower()
+                password = login_form.cleaned_data.get('password')
+                user = authenticate(request, email=email, password=password)
 
-            # Check if email and password are provided
-            if not email or not password:
-                messages.error(request, "لطفاً ایمیل و رمز عبور را وارد کنید.")
-                return redirect("/login-register/")
+                if user is not None:
+                    login(request, user)
+                    messages.success(request, "شما با موفقیت وارد شدید.")
+                    return redirect("/home/")
+                else:
+                    # This message is better than a generic one
+                    messages.error(request, "ایمیل یا رمز عبور اشتباه است.")
+            else:
+                messages.error(request, "لطفا اطلاعات را به درستی وارد کنید.")
 
-            email = email.strip().lower()
-
-            # Authenticate user with email and password
-            user = authenticate(request, email=email, password=password)
-
-            if user is not None:
-                login(request, user)
-                messages.success(request, "شما با موفقیت وارد شدید.")
-                return redirect("/home/")  # Home page URL
-
-        # ------------------- Registration Form -------------------
         elif form_id == "register-form":
-            first_name = request.POST.get("name")
-            last_name = request.POST.get("family")
-            email = request.POST.get("email")
-            password = request.POST.get("password")
-            confirm_password = request.POST.get("confirm_password")
-            invite_code = request.POST.get("invite_code")
-
-            # بررسی تطابق رمزهای عبور
-            if password != confirm_password:
-                messages.error(request, "رمزهای عبور یکسان نیستند.")
-                return redirect("/login-register/")
-
-            # Validate email format
-            try:
-                validate_email(email)
-                email = email.strip().lower()
-            except ValidationError:
-                messages.error(request, "فرمت ایمیل وارد شده صحیح نیست.")
-                return redirect("/login-register/")
-
-            # check if the email is already registered
-            if CustomUser.objects.filter(email=email).exists():
-                messages.error(request, "این ایمیل قبلاً ثبت شده است.")
-                return redirect("/login-register/")
-
-            # create a new user
-            try:
-                user = CustomUser.objects.create_user(
-                    email=email,
-                    password=password,
-                    first_name=first_name,
-                    last_name=last_name,
-                )
-            except Exception as e:
-                messages.error(request, f"خطا در ساخت کاربر: {str(e)}")
-                return redirect("/login-register/")
-
-            # check if the invite code is provided
-            invited_by_user = None
-            if invite_code:
+            register_form = RegisterForm(request.POST)
+            if register_form.is_valid():
                 try:
-                    # Find the inviter's profile using the invite code
-                    inviter_profile = Profile.objects.get(invite_code=invite_code)
-                    invited_by_user = inviter_profile.user
-                except Profile.DoesNotExist:
-                    user.delete()
-                    messages.error(request, "کد دعوت وارد شده معتبر نیست.")
-                    return redirect("/login-register/")
+                    user = register_form.save()
+                    login(request, user)
+                    messages.success(request, "حساب کاربری شما با موفقیت ایجاد و وارد شدید.")
+                    return redirect("/home/")
+                except Exception as e:
+                    messages.error(request, "خطا در ایجاد حساب کاربری.")
+            else:
+                messages.error(request, "لطفا اطلاعات را به درستی وارد کنید.")
 
-            # create a profile for the new user
-            try:
-                profile = Profile(user=user, invited_by=invited_by_user)
-                profile.save()
-                messages.success(request, "حساب کاربری شما با موفقیت ایجاد شد.")
-            except Exception as e:
-                user.delete()
-                messages.error(request, f"خطا در ساخت پروفایل: {str(e)}")
-                return redirect("/login-register/")
+    context = {
+        'login_form': login_form,
+        'register_form': register_form
+    }
+    return render(request, "user/login_register.html", context)
 
-            # Login the user after successful registration
-            login(request, user)
-            # Redirect to the home page
-            return redirect("/home/")
 
-    # If the request method is GET or no form matches, show the login/register page
-    return render(request, "user/login_register.html")
+
+
 
 
 def LogoutView(request):

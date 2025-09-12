@@ -1,7 +1,6 @@
+from adminlogs.action import add_admin_log
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
-
-from adminlogs.action import add_admin_log
 from plans.models import Plan
 
 

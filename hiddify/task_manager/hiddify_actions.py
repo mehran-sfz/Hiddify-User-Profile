@@ -9,7 +9,6 @@ import qrcode
 import requests
 from task_manager.models import HiddifyUser
 
-
 logger = logging.getLogger(__name__)
 
 

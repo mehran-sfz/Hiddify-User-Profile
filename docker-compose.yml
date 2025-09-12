@@ -112,7 +112,7 @@ certbot:
     entrypoint: >
           /bin/sh -c "
           trap exit TERM;
-          if [ ! -d /etc/letsencrypt/live/batmanam.sbs ]; then
+          if [ ! -d /etc/letsencrypt/live/YOUTDOMAIN.COM ]; then
             echo 'No certificate found, issuing new one';
             certbot certonly --webroot -w /var/www/certbot --email YOUREMAIL@EMAIL.COM -d YOUTDOMAIN.COM --agree-tos --non-interactive;
           fi;

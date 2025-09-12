@@ -1,6 +1,7 @@
 from django.shortcuts import redirect
-from django.urls import reverse, NoReverseMatch
+from django.urls import NoReverseMatch, reverse
 from django.utils.deprecation import MiddlewareMixin
+
 
 class RoleAndStatusCheckMiddleware(MiddlewareMixin):
     def process_view(self, request, view_func, view_args, view_kwargs):
