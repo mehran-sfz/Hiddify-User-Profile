@@ -5,6 +5,8 @@ from django.urls import reverse
 from django.utils.html import format_html
 
 from .models import CustomUser, Profile
+from django.contrib.auth.admin import UserAdmin
+from django.utils.translation import gettext_lazy as _
 
 
 # A helper function to display boolean values as icons
@@ -14,38 +16,42 @@ def boolean_icon(field_val):
 
 
 @admin.register(CustomUser)
-class CustomUserAdmin(admin.ModelAdmin):
+class CustomUserAdmin(UserAdmin):
     """
-    Simplified admin configuration for the CustomUser model.
+    Admin configuration for the custom user model.
+    Inherits from UserAdmin to get all its features, including the password change form.
     """
-    list_display = ('email', 'first_name', 'last_name', 'is_active_icon', 'is_staff_icon', 'date_joined')
-    list_filter = ('is_active', 'is_staff', 'date_joined')
+    # Fields to display in the main list view of users
+    list_display = ('email', 'first_name', 'last_name', 'is_staff', 'is_active')
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
+
+    # Fields to search by in the admin
     search_fields = ('email', 'first_name', 'last_name')
     ordering = ('-date_joined',)
 
-    # Simplified fieldsets without BaseUserAdmin's complexities
+    # The 'fieldsets' attribute defines the layout of the user edit page.
+    # We take the default UserAdmin fieldsets and replace 'username' with 'email'.
     fieldsets = (
-        ('User Info', {'fields': ('email', 'first_name', 'last_name')}),
-        ('Status', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
-        # Password field is made read-only to prevent incorrect saving
-        ('Security', {'fields': ('password',)}),
-        ('Important Dates', {'fields': ('date_joined', 'last_login')}),
+        (None, {'fields': ('email', 'password')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name')}),
+        (_('Permissions'), {
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
+        }),
+        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
 
-    # Make password and auto-dates read-only
-    readonly_fields = ('password', 'date_joined', 'last_login')
+    # The 'add_fieldsets' attribute defines the layout of the "add user" page.
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'password', 'password2'),
+        }),
+    )
 
-    def is_active_icon(self, obj):
-        return boolean_icon(obj.is_active)
-    is_active_icon.short_description = 'Active'
+    # These fields are automatically set and should not be edited directly.
+    # UserAdmin already makes these read-only, but it's good practice to be explicit.
+    readonly_fields = ('last_login', 'date_joined')
 
-    def is_staff_icon(self, obj):
-        return boolean_icon(obj.is_staff)
-    is_staff_icon.short_description = 'Staff'
-
-# -----------------------------------------------------------------
-# The ProfileAdmin class remains unchanged as it was correct.
-# -----------------------------------------------------------------
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
