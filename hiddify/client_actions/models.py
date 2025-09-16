@@ -27,6 +27,9 @@ class Config(models.Model):
         # Proceed with saving if the condition is met
         super(Config, self).save(*args, **kwargs)
 
+    def has_pending_order(self):
+        return self.order_configs.filter(pending=True).exists()
+
     def __str__(self):
         short_uuid = f"{self.uuid[:5]}...{self.uuid[-5:]}"
         email = self.user.email.split('@')[0]

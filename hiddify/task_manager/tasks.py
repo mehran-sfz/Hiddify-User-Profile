@@ -335,6 +335,10 @@ def send_warning_message():
 
             # get the users
             config = Config.objects.get(uuid=hiddify_account.uuid)
+            # if this config has a pending order continue
+            if config.has_pending_order:
+                logger.info(f"User {config.user} has a pending order.")
+                continue
 
             # check if the config.user has an telegram_account or not
             if not config.user.telegram_account.exists():
